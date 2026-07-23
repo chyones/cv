@@ -1,0 +1,17 @@
+node_modules
+.next
+.git
+.gitignore
+*.log
+npm-debug.log*
+
+.env
+.env.local
+.env.*.local
+.env.example
+
+README.md
+tests
+vitest.config.ts
+.eslintrc*
+eslint.config.*

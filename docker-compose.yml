@@ -1,0 +1,28 @@
+# EL RACE CV upload page -- isolated single-container project.
+# No database, no volumes, no published host port. Reached only through the
+# shared edge-proxy on the existing external "edge" network:
+#   cv.elrace.com -> Cloudflare Tunnel (elrace-web) -> edge-proxy -> elrace-cv-app:3000
+name: elrace-cv
+
+services:
+  app:
+    build: .
+    container_name: elrace-cv-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+    networks:
+      - edge
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:3000/', r => process.exit(r.statusCode < 500 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  edge:
+    external: true
