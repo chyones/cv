@@ -1,261 +1,150 @@
-# EL RACE Employee CV Update Portal — Build Prompt
+# EL RACE Temporary CV Upload Page — Build Prompt
 
-Act as a senior full-stack engineer and product designer. Build the complete production-ready project in this repository. Do not stop at a mockup, do not leave placeholder logic, and do not ask for additional design decisions. Make sensible secure defaults and document every deployment step.
+Build the complete working project in this repository. The page is a temporary HR tool and must remain simple, fast, professional, and English-only.
 
-## Objective
+## Purpose
 
-Create a public, no-login web page where an EL RACE employee can submit an updated CV. The employee must never be able to browse, search, preview, download, or discover any other employee’s data. After a successful submission, show a clear bilingual success confirmation and a non-sensitive reference number.
+Create one public page that any EL RACE employee can open without signing in. The employee enters their full name, employee file number, selects their CV, and submits it. The backend uploads the CV directly to the HR Google Drive folder. HR will manage the files directly in Google Drive, so do not build an admin panel, employee account, login page, file browser, dashboard, database, or HR interface.
 
-The source code stays in GitHub. Deploy the application as a full-stack Next.js application, not as a GitHub Pages-only static site, because secure Google Drive upload requires a server-side API.
+## Required page
 
-## Critical privacy rule
+Use the supplied EL RACE logo at:
 
-The existing Google Drive folder must not remain public. Remove “Anyone with the link” access before production. Share the folder only with the Google service account used by the backend. Never put Google credentials, private keys, Drive file IDs, uploaded-file URLs, or sensitive employee data in client-side code, Git history, browser storage, analytics, error messages, or public logs.
+`public/assets/elrace-logo.svg`
 
-The frontend must never call Google Drive directly. It must only call the same-origin server endpoint. Do not create any endpoint that lists, reads, downloads, previews, or searches submitted CVs.
+Create a clean responsive page using EL RACE navy, red, white, and a light neutral background.
 
-## Required stack
+Display this content:
 
-- Next.js 15+ App Router
-- TypeScript with strict mode
-- Tailwind CSS
-- React Hook Form
-- Zod validation shared where practical
-- Google Drive API through a server-side service account
-- Cloudflare Turnstile for anonymous anti-abuse protection
-- Vitest or Jest for unit tests
-- Playwright for the critical submission flow
-- ESLint, Prettier, and GitHub Actions CI
+### Heading
 
-Keep dependencies minimal and maintained. Do not use a database for this version.
+`Update Your CV`
 
-## Branding and visual direction
+### Instruction text
 
-Use the supplied company logo at `public/assets/elrace-logo.svg`. It contains the original uploaded PNG artwork embedded without visual changes.
+`Kindly update your CV to reflect your current job position, latest responsibilities, qualifications, certifications, and any other recent professional achievements.`
 
-Brand colors extracted from the supplied logo:
+`Please rename your CV using your employee file number before uploading it.`
 
-- EL RACE red: `#CE363A`
-- EL RACE navy: `#29357E`
-- White: `#FFFFFF`
-- Page background: very light cool gray such as `#F6F7FB`
-- Main text: deep neutral such as `#151826`
+`Submit your updated CV no later than Sunday, 26 July 2026.`
 
-Create a premium corporate interface: clean spacing, confident typography, restrained motion, subtle depth, soft borders, and a polished upload experience. Avoid a generic template appearance, excessive gradients, excessive glass effects, or visual clutter.
+### Form fields
 
-The page must be fully responsive and look excellent on mobile first, tablet, laptop, and large desktop. Support both LTR and RTL correctly.
+Only include:
 
-## Page experience
+1. `Full Name` — required
+2. `Employee File Number` — required
+3. `Upload CV` — required
 
-Build one focused page with these elements:
+Accepted file types:
 
-1. EL RACE logo and a small company identity header.
-2. Language switcher: English and Arabic.
-3. Main heading:
-   - English: `Update Your CV`
-   - Arabic: `حدّث سيرتك الذاتية`
-4. Supporting text explaining that the form securely sends the latest CV to EL RACE HR and that no login is required.
-5. A short three-step visual indicator:
-   - Enter details
-   - Upload CV
-   - Receive confirmation
-6. Form fields:
-   - Full name — required
-   - Employee ID / File Number — required
-   - Company email — required and validated
-   - Department or current project — optional
-   - Mobile number — optional
-   - CV file — required
-   - Privacy consent checkbox — required
-7. A professional drag-and-drop upload area with normal file picker fallback.
-8. Accepted formats: PDF, DOC, DOCX only.
-9. Maximum file size: 10 MB.
-10. Show selected filename, readable size, file type, remove/replace action, and validation state.
-11. Submit button text:
-    - English: `Submit Updated CV`
-    - Arabic: `إرسال السيرة الذاتية المحدّثة`
-12. During submission, lock duplicate submissions and show real progress states such as validating, securely uploading, and finalizing. Never show a fake percentage if the implementation cannot measure actual upload progress.
-13. Success state must replace the form and show:
-    - English: `Your CV has been submitted successfully.`
-    - Arabic: `تم تحديث سيرتك الذاتية بنجاح.`
-    - Submission timestamp
-    - Safe reference code generated by the application
-    - A button to submit another CV
-14. Failure states must be specific but must not leak infrastructure details. Preserve entered text and selected file when safely possible.
-15. Footer with `EL RACE Contracting` and a short privacy statement. Do not link to the Drive folder.
+- PDF
+- DOC
+- DOCX
 
-## Accessibility and UX quality
+Maximum file size: 10 MB.
 
-- WCAG 2.2 AA target
-- Full keyboard support
-- Visible focus states
-- Correct labels, descriptions, error associations, and ARIA live regions
-- Respect `prefers-reduced-motion`
-- Minimum touch target size of 44 px
-- Strong color contrast
-- No horizontal overflow
-- No layout shift caused by the logo or form validation
-- Use semantic HTML
+Show the selected filename and a simple remove or replace option.
 
-## Server API
+Use one primary button:
 
-Create only the required write endpoint, for example:
+`Submit Updated CV`
 
-`POST /api/cv/upload`
+While uploading, disable the form and show:
 
-Requirements:
+`Uploading your CV...`
 
-1. Accept `multipart/form-data`.
-2. Verify Cloudflare Turnstile on the server.
-3. Enforce request and file-size limits on the server.
-4. Validate every text field with Zod.
-5. Normalize and sanitize all user-provided text.
-6. Validate extension, declared MIME type, and file signature where technically reliable. Reject renamed executables and unsupported content.
-7. Never trust the original filename.
-8. Generate a safe stored filename in this form:
-   `CV_<sanitized-employee-id>_<sanitized-full-name>_<UTC-timestamp>.<ext>`
-9. Upload through the Google Drive API to the configured private target folder.
-10. Keep the uploaded Drive file private. Do not create public permissions.
-11. Store useful non-secret metadata through Drive `appProperties`, including employee ID, normalized email, upload timestamp, and generated reference code.
-12. Do not return the Google Drive file ID or URL to the browser.
-13. Return only a structured success response containing the safe reference code and timestamp.
-14. Return consistent JSON errors with an application error code and safe localized message.
-15. Disable caching for all submission responses.
-16. Redact names, emails, phone numbers, CV contents, tokens, credentials, and Drive identifiers from logs.
-17. Do not create GET, list, search, preview, or download behavior for CV files.
+After the Google Drive upload is confirmed, replace the form with:
 
-Use cryptographically secure random data for the reference code, for example `RCC-CV-20260723-AB12CD`, without embedding the employee ID.
+`Your CV has been submitted successfully.`
 
-## Security controls
+Also show:
 
-- Same-origin API usage only
-- Cloudflare Turnstile verification
-- Strict input validation
-- Safe filename generation
-- Content Security Policy compatible with Turnstile
-- `X-Content-Type-Options: nosniff`
-- `Referrer-Policy: strict-origin-when-cross-origin`
-- `Permissions-Policy` denying unnecessary browser features
-- Frame protection through CSP `frame-ancestors`
-- No secrets exposed through `NEXT_PUBLIC_*`, except the Turnstile site key
-- No sensitive data in localStorage or sessionStorage
-- No HTML injection or unsafe rendering
-- No external analytics in the initial version
-- Graceful timeout handling
-- Idempotency protection against rapid double submission from the same page session
+`Thank you for updating your information.`
 
-## Environment variables
+Provide a small `Submit Another CV` button.
 
-Create `.env.example` with placeholders only:
+For errors, show short clear messages such as:
+
+- `Please enter your full name.`
+- `Please enter your employee file number.`
+- `Please select a PDF, DOC, or DOCX file.`
+- `The file must not exceed 10 MB.`
+- `The upload could not be completed. Please try again.`
+
+## Google Drive upload
+
+Use a server-side API route. The browser must never upload directly to Google Drive and must never receive Google credentials.
+
+Target Google Drive folder ID:
+
+`1bDjbuIAjneyY-y0D1o5EGtOvkc_TaKIn`
+
+Read the folder ID from the server environment variable `GOOGLE_DRIVE_FOLDER_ID`. Do not hardcode credentials or private keys.
+
+Use a Google service account and these server-only environment variables:
 
 ```env
 GOOGLE_SERVICE_ACCOUNT_EMAIL=
 GOOGLE_PRIVATE_KEY=
-GOOGLE_DRIVE_FOLDER_ID=
-NEXT_PUBLIC_TURNSTILE_SITE_KEY=
-TURNSTILE_SECRET_KEY=
+GOOGLE_DRIVE_FOLDER_ID=1bDjbuIAjneyY-y0D1o5EGtOvkc_TaKIn
 MAX_CV_SIZE_MB=10
 ```
 
-Handle escaped newlines in `GOOGLE_PRIVATE_KEY` correctly. Validate required environment variables at server startup or first API use with a clear configuration error that is never exposed in detail to public users.
+The Google Drive folder must be shared with the service-account email as Editor.
 
-Do not hardcode the supplied Google Drive folder link or folder ID in the repository. The owner will place the target folder ID in the deployment environment variable after the folder has been made private.
+When saving the file to Google Drive:
 
-## Repository structure
+- Sanitize the employee file number.
+- Preserve the valid original extension.
+- Rename the stored file to `<employee-file-number> - <full-name>.<extension>`.
+- Never expose the Drive file ID, folder link, or uploaded-file link to the employee.
+- Do not create any API route for listing, viewing, searching, downloading, or deleting files.
+- Do not allow the public page to display existing uploads.
 
-Use a clean maintainable structure similar to:
+## Technical implementation
 
-```text
-app/
-  api/cv/upload/route.ts
-  globals.css
-  layout.tsx
-  page.tsx
-components/
-  cv-upload-form.tsx
-  file-dropzone.tsx
-  language-switcher.tsx
-  success-panel.tsx
-lib/
-  env.ts
-  google-drive.ts
-  security.ts
-  turnstile.ts
-  validation.ts
-messages/
-  en.ts
-  ar.ts
-public/
-  assets/elrace-logo.svg
-tests/
-  unit/
-  e2e/
-```
+Use:
 
-Adjust the structure when a better implementation is justified, but keep frontend, validation, security, and Google Drive integration clearly separated.
+- Next.js App Router
+- TypeScript
+- Tailwind CSS
+- A server-side Google Drive API integration
+- Simple server-side validation
 
-## Deployment documentation
+Do not add unnecessary packages or features.
 
-Write a complete `README.md` containing exact steps for:
+The design must be:
 
-1. Local installation and commands.
-2. Creating or selecting a Google Cloud project.
-3. Enabling the Google Drive API.
-4. Creating a service account.
-5. Creating and securely storing the service-account key.
-6. Removing public access from the target Drive folder.
-7. Sharing only that folder with the service-account email as Editor.
-8. Setting local environment variables without committing them.
-9. Creating Cloudflare Turnstile keys for the production domain and localhost testing.
-10. Deploying through Vercel from this GitHub repository.
-11. Setting production environment variables in Vercel.
-12. Verifying a production upload without exposing existing files.
-13. Rotating the Google service-account key.
-14. Troubleshooting safe common errors.
+- English-only
+- Mobile-first and fully responsive
+- One centered professional form card
+- Clear and easy for non-technical employees
+- Accessible by keyboard
+- Free from excessive animation, gradients, illustrations, multiple steps, language selectors, menus, dashboards, and unnecessary text
 
-Add a prominent warning in the README that GitHub Pages alone cannot securely hold Google credentials or perform this upload architecture.
+## Required files and documentation
 
-## Quality gates
+Create the complete application, including:
 
-Create scripts for:
+- Frontend page
+- Upload API route
+- Google Drive integration
+- `.env.example`
+- `.gitignore`
+- `README.md`
+- Basic validation tests
 
-- `npm run dev`
-- `npm run build`
-- `npm run lint`
-- `npm run typecheck`
-- `npm run test`
-- `npm run test:e2e`
+The README must explain only the necessary setup:
 
-Create GitHub Actions CI that installs dependencies with a lockfile and runs lint, typecheck, unit tests, and production build. E2E tests may use mocked external services in CI.
+1. Install and run locally.
+2. Enable Google Drive API.
+3. Create a Google service account.
+4. Share the target folder with the service-account email as Editor.
+5. Configure environment variables.
+6. Deploy the project to Vercel.
+7. Test one CV upload.
 
-Tests must cover at minimum:
+Do not use GitHub Pages because the Google Drive credentials require a secure server-side environment.
 
-- Valid PDF submission
-- Valid DOC and DOCX validation paths
-- Unsupported extension rejection
-- Oversized file rejection
-- Missing required field rejection
-- Invalid email rejection
-- Turnstile failure
-- Google Drive upload failure with safe public error
-- Duplicate-click protection
-- English and Arabic layout behavior
-- Success state and safe reference code
-- Confirmation that API responses never contain Drive file IDs or URLs
-
-## Acceptance criteria
-
-The work is complete only when:
-
-- The page is polished, responsive, bilingual, and accessible.
-- A user can submit a valid CV without signing in.
-- No user can list or view existing files through the application.
-- The browser receives no Google credentials or Drive identifiers.
-- Uploaded files remain private in Google Drive.
-- Invalid and malicious uploads are rejected server-side.
-- The success message appears only after confirmed Drive upload.
-- Build, lint, typecheck, and tests pass.
-- The README allows another engineer to deploy the project without guessing.
-- No secret, real private key, uploaded CV, or employee personal data is committed.
-
-Implement the entire project now, inspect your own work, run all available checks, fix failures, and finish with a concise implementation report listing files changed, test results, remaining manual deployment steps, and any security assumptions.
+Implement the project completely, run lint, type checking, tests, and production build, fix all failures, then provide a concise report of the files created, checks passed, and the remaining Google/Vercel configuration steps.
