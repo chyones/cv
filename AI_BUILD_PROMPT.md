@@ -42,7 +42,7 @@ Accepted file types:
 - DOC
 - DOCX
 
-Maximum file size: 10 MB.
+Maximum file size: 50 MB.
 
 Show the selected filename and a simple remove or replace option.
 
@@ -69,7 +69,7 @@ For errors, show short clear messages such as:
 - `Please enter your full name.`
 - `Please enter your employee file number.`
 - `Please select a PDF, DOC, or DOCX file.`
-- `The file must not exceed 10 MB.`
+- `The file must not exceed 50 MB.`
 - `The upload could not be completed. Please try again.`
 
 ## Google Drive upload
@@ -88,7 +88,7 @@ Use a Google service account and these server-only environment variables:
 GOOGLE_SERVICE_ACCOUNT_EMAIL=
 GOOGLE_PRIVATE_KEY=
 GOOGLE_DRIVE_FOLDER_ID=1bDjbuIAjneyY-y0D1o5EGtOvkc_TaKIn
-MAX_CV_SIZE_MB=10
+MAX_CV_SIZE_MB=50
 ```
 
 The Google Drive folder must be shared with the service-account email as Editor.
@@ -113,6 +113,8 @@ Use:
 - Simple server-side validation
 
 Do not add unnecessary packages or features.
+
+Configure the application server, reverse proxy, and deployment platform to accept multipart uploads of at least 50 MB. Do not claim 50 MB support unless an actual near-limit upload is tested successfully in the deployed environment.
 
 The design must be:
 
@@ -142,9 +144,9 @@ The README must explain only the necessary setup:
 3. Create a Google service account.
 4. Share the target folder with the service-account email as Editor.
 5. Configure environment variables.
-6. Deploy the project to Vercel.
-7. Test one CV upload.
+6. Deploy the project to a server-side platform configured for 50 MB uploads.
+7. Test one normal CV upload and one near-50-MB upload.
 
 Do not use GitHub Pages because the Google Drive credentials require a secure server-side environment.
 
-Implement the project completely, run lint, type checking, tests, and production build, fix all failures, then provide a concise report of the files created, checks passed, and the remaining Google/Vercel configuration steps.
+Implement the project completely, run lint, type checking, tests, and production build, fix all failures, then provide a concise report of the files created, checks passed, and the remaining Google/deployment configuration steps.
