@@ -103,7 +103,7 @@ Upload rules:
 
 - Validate full name and employee file number on the server.
 - Accept only PDF, DOC, and DOCX.
-- Enforce 50 MB on client, application, and complete request path.
+- Enforce 50 MB on client, application, edge proxy, and the complete request path.
 - Stream the upload or use a temporary file and delete it immediately.
 - Sanitize full name and file number.
 - Save as `<employee-file-number> - <full-name>.<extension>`.
@@ -129,77 +129,131 @@ Create:
 
 Run lint, type checking, tests, and production build. Fix every failure.
 
-## Contabo deployment
+## Existing server architecture
 
-Deploy only after a read-only inspection and explicit approval of the deployment plan.
+The application will be deployed on the existing Contabo VPS using the current EL RACE publishing architecture.
 
-Use:
+Use these exact values:
 
-- Directory: `/opt/elrace-cv`
-- Compose project: `elrace-cv`
-- Container: `elrace-cv-app`
-- Internal port: `3000`
-- Hostname: `cv.elrace.com`
-- Existing tunnel: `elrace-web`
+- Server project directory: `/root/CV App`
+- Docker Compose project name: `elrace-cv`
+- Application container name: `elrace-cv-app`
+- Application internal port: `3000`
+- Public hostname: `cv.elrace.com`
+- Existing Cloudflare Tunnel: `elrace-web`
+- Existing published application origin: `http://edge-proxy:80`
 
-The CV application must be isolated. Do not stop, restart, rebuild, reconfigure, delete, or modify any existing application, container, Compose project, database, volume, network, proxy, firewall rule, DNS record, Nginx site, Apache site, or tunnel hostname.
+The path contains a space. Quote it in shell commands, for example:
 
-Never run `docker system prune`, a global `docker compose down`, or commands targeting unrelated services. All Docker commands must target only the `elrace-cv` project. Keep production secrets in `/opt/elrace-cv/.env` with permission `600` and never commit them.
+```bash
+cd "/root/CV App"
+```
 
-Preferred connection:
+Keep production secrets only in:
 
-1. Inspect whether `elrace-web` runs in Docker or on the host.
-2. If cloudflared runs in Docker, identify its existing network without changing or recreating it.
-3. Attach only `elrace-cv-app` to that network as an external network.
-4. Do not publish a host port.
-5. Set the tunnel origin to `http://elrace-cv-app:3000`.
+`/root/CV App/.env`
 
-Fallback only when cloudflared runs directly on the host:
+Set the file permission to `600`. Never commit production secrets.
 
-- Confirm port `3015` is free.
-- Bind only `127.0.0.1:3015:3000`.
-- Set the tunnel origin to `http://127.0.0.1:3015`.
+## Required routing architecture
 
-Never bind the app to a public `0.0.0.0` host port.
+Do not point the Cloudflare Tunnel directly to the CV application container.
 
-## Cloudflare Tunnel
+Use this exact flow:
 
-Use the existing tunnel `elrace-web`. Add only:
+```text
+cv.elrace.com
+    -> Cloudflare Tunnel: elrace-web
+    -> http://edge-proxy:80
+    -> host-based edge-proxy route for cv.elrace.com
+    -> http://elrace-cv-app:3000
+```
 
-- Hostname: `cv.elrace.com`
-- Service type: `HTTP`
-- Service URL: `http://elrace-cv-app:3000` when using the shared Docker network
+Cloudflare configuration:
 
-Do not create a second tunnel. Do not replace the tunnel. Do not delete, overwrite, or alter existing public hostnames. If using an ingress YAML file, back it up, preserve every existing rule exactly, and add the CV rule before the final catch-all rule.
+- Add only the public hostname `cv.elrace.com` to the existing tunnel `elrace-web`.
+- Service type: `HTTP`.
+- Service URL: `http://edge-proxy:80`.
+- Do not create another tunnel.
+- Do not replace or recreate `elrace-web`.
+- Do not alter or delete any existing public hostname.
+
+Edge proxy configuration:
+
+- Inspect the current edge-proxy implementation and configuration in read-only mode first.
+- Determine whether it uses Nginx, Caddy, Traefik, or another router.
+- Back up the exact configuration file before changing it.
+- Preserve every existing route exactly.
+- Add only one host rule for `cv.elrace.com` that proxies to `http://elrace-cv-app:3000`.
+- Preserve the original `Host` header and standard forwarded headers.
+- Configure the upload/body limit so a 50 MB CV can pass safely; use a small margin above 50 MB when the proxy requires it.
+- Validate the proxy configuration before applying it.
+- Prefer a graceful configuration reload rather than restarting the edge proxy.
+- If a full edge-proxy restart would be required, stop and request explicit approval before doing it.
+
+Docker networking:
+
+- Inspect the Docker network currently used by `edge-proxy`.
+- Attach only `elrace-cv-app` to that existing network as an external network in the CV project's Compose file.
+- Do not recreate, rename, or remove the existing network.
+- Do not publish a host port for the CV application.
+- Do not bind the CV application to `0.0.0.0` on the host.
+- Confirm that `edge-proxy` can resolve `elrace-cv-app` and reach port `3000` before adding the public hostname.
+
+## Isolation and safety
+
+The CV application must remain isolated from all existing programs.
+
+Do not:
+
+- Stop, restart, rebuild, delete, or reconfigure unrelated containers.
+- Run `docker system prune`.
+- Run a global `docker compose down`.
+- Modify unrelated Compose projects.
+- Modify existing databases or volumes.
+- Modify unrelated proxy routes.
+- Modify unrelated Cloudflare hostnames.
+- Modify firewall rules, public ports, Nginx sites, Apache sites, application files, or DNS records unrelated to `cv.elrace.com`.
+- Recreate the existing edge proxy, Cloudflare Tunnel, or Docker network.
+
+All Docker commands must target only the `elrace-cv` Compose project. The only permitted shared-infrastructure change is adding the single `cv.elrace.com` route to the existing edge proxy and adding the single public hostname to `elrace-web`.
 
 ## Mandatory plan before server changes
 
-Before changing the VPS or Cloudflare, report:
+Before modifying the VPS, edge proxy, or Cloudflare, perform a read-only inspection and report:
 
-- Whether cloudflared runs on the host or in Docker
-- Existing tunnel network name
-- Proposed CV network connection
-- Proposed origin URL
-- Whether loopback port `3015` is required
-- Exact files and services that would change
-- Exact rollback commands
+- The exact edge-proxy container and technology.
+- The exact edge-proxy configuration file that requires one added route.
+- The existing Docker network name shared by `edge-proxy`.
+- The proposed Compose network declaration for `elrace-cv-app`.
+- Confirmation that no host port will be published.
+- Confirmation that Cloudflare will use `http://edge-proxy:80`.
+- The exact files and services that would change.
+- Whether a graceful edge-proxy reload is available.
+- Exact rollback commands.
 
-Stop and wait for explicit approval before deployment.
+Stop and wait for explicit approval before any server, edge-proxy, or Cloudflare change.
 
 ## Verification
 
 Verify that:
 
-- `https://cv.elrace.com` loads.
+- `https://cv.elrace.com` loads through `http://edge-proxy:80`.
 - The page is English-only and responsive.
 - Only full name, file number, and CV are requested.
 - PDF, DOC, and DOCX work up to 50 MB.
+- The edge proxy accepts the upload size without affecting other routes.
 - The CV reaches the correct Drive folder with the required filename.
 - Success appears only after confirmed upload.
 - No Google credentials or Drive identifiers reach the browser.
-- Existing tunnel hostnames and applications still work unchanged.
+- All existing applications and tunnel hostnames still work unchanged.
 - No public VPS port was opened.
 
-Rollback must remove only the `cv.elrace.com` route and stop only the `elrace-cv` Compose project. Leave every existing program and configuration untouched.
+Rollback must:
 
-Do not use GitHub Pages or Vercel. Build for the Contabo VPS and the existing `elrace-web` Cloudflare Tunnel.
+1. Remove only the `cv.elrace.com` rule from the edge proxy.
+2. Remove only the `cv.elrace.com` public hostname from `elrace-web`.
+3. Stop and remove only the `elrace-cv` Compose project.
+4. Leave every existing program, proxy route, tunnel hostname, network, database, and configuration untouched.
+
+Do not use GitHub Pages or Vercel. Build for the Contabo VPS, the existing `edge-proxy`, and the existing `elrace-web` Cloudflare Tunnel.
