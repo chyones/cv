@@ -129,11 +129,54 @@ Create:
 
 Run lint, type checking, tests, and production build. Fix every failure.
 
+## Mandatory repository and server reconciliation
+
+Before building on, copying to, pulling into, or deploying inside `/root/CV App`, inspect both the GitHub repository and the existing server directory in read-only mode and reconcile them.
+
+The server contents must not be assumed to be empty, current, disposable, or identical to GitHub.
+
+Read-only inspection must include:
+
+- `pwd` and a safe directory listing of `/root/CV App`, including hidden files.
+- File tree, file sizes, ownership, permissions, and modification times.
+- Whether `/root/CV App` is already a Git repository.
+- Current Git remote, branch, commit, status, tracked changes, untracked files, and ignored files when Git exists.
+- Existing `Dockerfile`, Compose files, `.dockerignore`, `.gitignore`, package files, lockfiles, application source, proxy-related files, deployment scripts, and README files.
+- Existing `.env` presence, path, owner, and permissions without printing secret values.
+- Existing containers, images, Compose project labels, container names, mounted paths, networks, and volumes related to this directory or proposed project name.
+- Differences between the current GitHub repository and `/root/CV App` using filenames and checksums or Git diff where possible.
+
+Then produce a reconciliation report containing:
+
+1. Files that exist only in GitHub.
+2. Files that exist only on the server.
+3. Files present in both but different.
+4. Existing server files that must be preserved.
+5. Existing server files that appear obsolete, without deleting them.
+6. Whether the GitHub project can be safely deployed as-is.
+7. The exact proposed synchronization method.
+8. The exact files that would be created, replaced, preserved, moved, or backed up.
+9. The exact rollback procedure.
+
+Reconciliation rules:
+
+- Never overwrite the existing server directory blindly.
+- Never run `git reset --hard`, `git clean`, `rm -rf`, destructive `rsync --delete`, or any command that removes unknown server content.
+- Never replace or delete `/root/CV App/.env`.
+- Never print, commit, upload, or expose secret values.
+- Preserve server-only operational files unless their removal is explicitly approved.
+- Preserve any valid server changes that are not yet in GitHub and report them clearly.
+- When equivalent files differ, determine why before choosing either version.
+- Treat the server architecture and active runtime configuration as the deployment source of truth, while treating GitHub as the application source of truth.
+- Adapt the project files to the verified server architecture rather than forcing assumed networking, paths, container settings, or proxy behavior.
+- Create a timestamped backup of every existing file that would be changed before changing it.
+- Stop and wait for explicit approval after the reconciliation report. Do not synchronize, build, deploy, restart, reload, or modify anything before approval.
+
 ## Existing server architecture
 
 The application will be deployed on the existing Contabo VPS using the current EL RACE publishing architecture.
 
-Use these exact values:
+Use these exact values only after confirming them against the server inspection:
 
 - Server project directory: `/root/CV App`
 - Docker Compose project name: `elrace-cv`
@@ -159,7 +202,7 @@ Set the file permission to `600`. Never commit production secrets.
 
 Do not point the Cloudflare Tunnel directly to the CV application container.
 
-Use this exact flow:
+Use this flow only after confirming that it matches the active server architecture:
 
 ```text
 cv.elrace.com
@@ -220,8 +263,10 @@ All Docker commands must target only the `elrace-cv` Compose project. The only p
 
 ## Mandatory plan before server changes
 
-Before modifying the VPS, edge proxy, or Cloudflare, perform a read-only inspection and report:
+Before modifying the VPS, edge proxy, or Cloudflare, perform the repository/server reconciliation and read-only infrastructure inspection, then report:
 
+- The exact state and differences between GitHub and `/root/CV App`.
+- The exact synchronization method and backup plan.
 - The exact edge-proxy container and technology.
 - The exact edge-proxy configuration file that requires one added route.
 - The existing Docker network name shared by `edge-proxy`.
@@ -232,12 +277,14 @@ Before modifying the VPS, edge proxy, or Cloudflare, perform a read-only inspect
 - Whether a graceful edge-proxy reload is available.
 - Exact rollback commands.
 
-Stop and wait for explicit approval before any server, edge-proxy, or Cloudflare change.
+Stop and wait for explicit approval before any synchronization, build, deployment, server, edge-proxy, or Cloudflare change.
 
 ## Verification
 
 Verify that:
 
+- The deployed server files match the approved reconciled project state.
+- No server-only or secret file was lost or overwritten.
 - `https://cv.elrace.com` loads through `http://edge-proxy:80`.
 - The page is English-only and responsive.
 - Only full name, file number, and CV are requested.
@@ -251,9 +298,10 @@ Verify that:
 
 Rollback must:
 
-1. Remove only the `cv.elrace.com` rule from the edge proxy.
-2. Remove only the `cv.elrace.com` public hostname from `elrace-web`.
-3. Stop and remove only the `elrace-cv` Compose project.
-4. Leave every existing program, proxy route, tunnel hostname, network, database, and configuration untouched.
+1. Restore only the backed-up CV project or proxy files changed during the approved deployment.
+2. Remove only the `cv.elrace.com` rule from the edge proxy.
+3. Remove only the `cv.elrace.com` public hostname from `elrace-web`.
+4. Stop and remove only the `elrace-cv` Compose project.
+5. Leave every existing program, proxy route, tunnel hostname, network, database, server-only file, secret, and configuration untouched.
 
-Do not use GitHub Pages or Vercel. Build for the Contabo VPS, the existing `edge-proxy`, and the existing `elrace-web` Cloudflare Tunnel.
+Do not use GitHub Pages or Vercel. Build for the reconciled contents of `/root/CV App`, the existing Contabo VPS, the existing `edge-proxy`, and the existing `elrace-web` Cloudflare Tunnel.
