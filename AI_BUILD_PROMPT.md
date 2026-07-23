@@ -1,87 +1,38 @@
-# EL RACE Temporary CV Upload Page — Final Build and Deployment Prompt
+# EL RACE Temporary CV Upload Page — Final Prompt
 
-Build the complete project in this repository. This is a temporary HR page for employees to submit updated CVs. Keep the user experience extremely simple. The page must still look modern, polished, professional, and clearly branded for EL RACE.
+Build the complete project in this repository. This is a temporary English-only HR page at `https://cv.elrace.com`. Keep the workflow extremely simple while making the design modern, polished, professional, responsive, and clearly branded for EL RACE.
 
-## 1. Exact scope
+## Exact scope
 
-Create one public English-only page at:
-
-`https://cv.elrace.com`
-
-Do not create:
-
-- Login or authentication
-- Employee accounts
-- Dashboard
-- Admin panel
-- HR interface
-- Database
-- File browser
-- Navigation menu
-- Extra pages
-- Email workflow
-- Approval workflow
-- Analytics
+Create one public page only. Do not create login, accounts, dashboard, admin panel, HR interface, database, file browser, navigation, email workflow, analytics, or extra pages.
 
 The employee must only:
 
-1. Enter their full name.
-2. Enter their employee file number.
-3. Select or drag and drop their CV.
-4. Submit it.
-5. See a success confirmation.
+1. Enter `Full Name`.
+2. Enter `Employee File Number`.
+3. Select or drag and drop a CV.
+4. Click `Submit Updated CV`.
+5. See a success confirmation after Google Drive confirms the upload.
 
-The backend uploads the CV directly to the HR Google Drive folder. HR will manage the uploaded files directly in Google Drive.
+HR will manage all files directly in Google Drive.
 
-## 2. Branding and design
+## Design
 
-Use the supplied logo:
-
-`public/assets/elrace-logo.svg`
-
-Preserve the logo proportions and quality.
+Use `public/assets/elrace-logo.svg` and preserve its proportions.
 
 Brand colors:
 
-- EL RACE navy: `#29357E`
-- EL RACE red: `#CE363A`
+- Navy: `#29357E`
+- Red: `#CE363A`
 - White: `#FFFFFF`
-- Soft background: `#F5F7FB`
-- Dark text: `#171A24`
+- Background: `#F5F7FB`
+- Text: `#171A24`
 
-The page must look professionally designed and production-ready, not like a basic generated form.
+Use one refined page and one clear form. Apply modern corporate typography, strong spacing, soft shadows, precise borders, balanced white space, a professional drag-and-drop area, subtle construction-inspired background geometry, clear focus states, and excellent mobile layout.
 
-Use:
+Do not use stock images, large illustrations, animated backgrounds, glassmorphism, excessive gradients, decorative clutter, multiple unnecessary cards, long text, or generic marketing content.
 
-- One refined page composition
-- One clear upload form
-- Strong spacing and visual hierarchy
-- Modern corporate typography
-- Soft shadows and precise borders
-- Balanced white space
-- A strong drag-and-drop upload area
-- Subtle architectural or construction-inspired background details
-- Small icons only when they improve clarity
-- Subtle hover, focus, upload, and success transitions
-- Excellent mobile responsiveness
-
-Do not use:
-
-- Excessive gradients
-- Glassmorphism
-- Stock images
-- Large illustrations
-- Animated backgrounds
-- Decorative clutter
-- Multiple unnecessary cards
-- Long text
-- Generic marketing content
-
-The design must feel premium while the task remains immediately obvious.
-
-## 3. Page copy
-
-Keep all writing short and directly related to the CV update request.
+## Exact page copy
 
 Eyebrow:
 
@@ -91,28 +42,23 @@ Heading:
 
 `Update Your CV`
 
-Introductory text:
+Intro:
 
 `Please submit your latest CV so your employee record reflects your current position, responsibilities, qualifications, certifications, and recent professional achievements.`
 
-Deadline notice:
+Deadline:
 
 `Submission deadline: Sunday, 26 July 2026`
 
-File naming note:
+File note:
 
 `Please rename your CV using your employee file number before uploading.`
 
-Form fields:
+Fields:
 
-- `Full Name`
-- `Employee File Number`
+- `Full Name` — placeholder: `Enter your full name`
+- `Employee File Number` — placeholder: `Enter your file number`
 - `Upload CV`
-
-Placeholders:
-
-- `Enter your full name`
-- `Enter your file number`
 
 Upload area:
 
@@ -120,17 +66,11 @@ Upload area:
 - `or choose a file from your device`
 - `PDF, DOC, or DOCX — maximum 50 MB`
 
-Show the selected filename, file size, and a simple remove or replace action.
-
-Submit button:
-
-`Submit Updated CV`
+Show selected filename, file size, and remove or replace action.
 
 Uploading state:
 
 `Uploading your CV...`
-
-Disable duplicate submissions while uploading.
 
 Success state:
 
@@ -138,27 +78,17 @@ Success state:
 - `Thank you for keeping your employee information up to date.`
 - `Submit Another CV`
 
-Safe error messages:
+Use short safe validation messages. Never expose technical or Google Drive errors.
 
-- `Please enter your full name.`
-- `Please enter your employee file number.`
-- `Please select a PDF, DOC, or DOCX file.`
-- `The file must not exceed 50 MB.`
-- `The upload could not be completed. Please try again.`
+## Google Drive
 
-Never expose technical or Google Drive error details.
+Use a server-side API. The browser must never receive Google credentials, Drive IDs, folder links, or uploaded-file links.
 
-## 4. Google Drive upload
-
-Use a server-side API route. The browser must never receive Google credentials and must never upload directly to Google Drive.
-
-Target Google Drive folder ID:
+Target folder ID:
 
 `1bDjbuIAjneyY-y0D1o5EGtOvkc_TaKIn`
 
-Read it from the server environment variable `GOOGLE_DRIVE_FOLDER_ID`.
-
-Use these server-only environment variables:
+Server-only environment variables:
 
 ```env
 GOOGLE_SERVICE_ACCOUNT_EMAIL=
@@ -167,39 +97,26 @@ GOOGLE_DRIVE_FOLDER_ID=1bDjbuIAjneyY-y0D1o5EGtOvkc_TaKIn
 MAX_CV_SIZE_MB=50
 ```
 
-The Google Drive folder must be shared with the service-account email as Editor.
+Share the target folder with the service-account email as Editor.
 
-When processing the upload:
+Upload rules:
 
 - Validate full name and employee file number on the server.
 - Accept only PDF, DOC, and DOCX.
-- Enforce the 50 MB limit on both client and server.
-- Configure the complete request path to accept 50 MB files.
-- Avoid loading the entire file into memory when possible; stream it or use a temporary file and delete it immediately after upload.
-- Sanitize the employee file number and full name.
-- Preserve only a valid extension.
-- Rename the stored file to `<employee-file-number> - <full-name>.<extension>`.
-- Never return the Drive file ID, folder URL, or uploaded-file URL.
-- Never create list, search, preview, download, edit, or delete endpoints.
-- Never display existing Google Drive files.
+- Enforce 50 MB on client, application, and complete request path.
+- Stream the upload or use a temporary file and delete it immediately.
+- Sanitize full name and file number.
+- Save as `<employee-file-number> - <full-name>.<extension>`.
+- Never create list, preview, search, download, edit, or delete endpoints.
+- Never display existing Drive files.
 
-## 5. Technical implementation
+## Implementation
 
-Use:
+Use Next.js App Router, TypeScript, Tailwind CSS, Node.js runtime for upload, Google Drive API, minimal maintained dependencies, and simple client/server validation.
 
-- Next.js App Router
-- TypeScript
-- Tailwind CSS
-- Node.js runtime for the upload endpoint
-- Server-side Google Drive API integration
-- Minimal maintained dependencies
-- Simple client-side and server-side validation
+Create:
 
-Do not add features outside the defined scope.
-
-Required files:
-
-- Complete frontend page
+- Frontend page
 - Upload API route
 - Google Drive integration
 - `Dockerfile`
@@ -210,136 +127,79 @@ Required files:
 - `README.md`
 - Basic validation and upload tests
 
-## 6. Contabo VPS deployment
+Run lint, type checking, tests, and production build. Fix every failure.
 
-The application will run on the existing Contabo VPS. It must be isolated and must not change, stop, restart, rebuild, reconfigure, or remove any existing application.
+## Contabo deployment
 
-Use this deployment identity:
+Deploy only after a read-only inspection and explicit approval of the deployment plan.
 
-- Project directory: `/opt/elrace-cv`
-- Docker Compose project name: `elrace-cv`
-- Container name: `elrace-cv-app`
-- Internal application port: `3000`
-- Public hostname: `cv.elrace.com`
-- Existing Cloudflare Tunnel: `elrace-web`
+Use:
 
-Deployment safety rules:
+- Directory: `/opt/elrace-cv`
+- Compose project: `elrace-cv`
+- Container: `elrace-cv-app`
+- Internal port: `3000`
+- Hostname: `cv.elrace.com`
+- Existing tunnel: `elrace-web`
 
-- Inspect the server and current Cloudflare setup in read-only mode before deployment.
-- Do not run `docker system prune`.
-- Do not run a global `docker compose down`.
-- Do not stop or restart unrelated containers.
-- Do not modify unrelated Docker Compose files.
-- Do not modify existing databases, volumes, firewall rules, Nginx sites, Apache sites, ports, DNS records, or application files.
-- Do not reuse an occupied host port.
-- Do not expose the application directly to the public internet.
-- Do not bind the application to `0.0.0.0` on a public host port.
-- Keep secrets only in `/opt/elrace-cv/.env` with permission `600`.
-- Do not commit production secrets to GitHub.
-- All Docker commands must target only the `elrace-cv` project.
+The CV application must be isolated. Do not stop, restart, rebuild, reconfigure, delete, or modify any existing application, container, Compose project, database, volume, network, proxy, firewall rule, DNS record, Nginx site, Apache site, or tunnel hostname.
 
-Preferred networking method:
+Never run `docker system prune`, a global `docker compose down`, or commands targeting unrelated services. All Docker commands must target only the `elrace-cv` project. Keep production secrets in `/opt/elrace-cv/.env` with permission `600` and never commit them.
 
-1. Inspect how the existing `elrace-web` cloudflared container or service reaches internal applications.
-2. Identify the existing Docker network used by the tunnel without changing it.
-3. Attach only `elrace-cv-app` to that existing network as an external Docker network.
-4. Do not recreate the network or the existing cloudflared container.
-5. Do not publish a host port when the tunnel can reach the container directly.
+Preferred connection:
 
-The preferred Cloudflare Tunnel origin service is:
+1. Inspect whether `elrace-web` runs in Docker or on the host.
+2. If cloudflared runs in Docker, identify its existing network without changing or recreating it.
+3. Attach only `elrace-cv-app` to that network as an external network.
+4. Do not publish a host port.
+5. Set the tunnel origin to `http://elrace-cv-app:3000`.
 
-`http://elrace-cv-app:3000`
+Fallback only when cloudflared runs directly on the host:
 
-Use that service only when the CV container and the existing cloudflared container share the same Docker network.
-
-Fallback method only when the tunnel runs directly on the host:
-
-- Bind the application only to a free loopback address such as `127.0.0.1:3015:3000`.
+- Confirm port `3015` is free.
+- Bind only `127.0.0.1:3015:3000`.
 - Set the tunnel origin to `http://127.0.0.1:3015`.
-- Confirm port `3015` is unused before using it.
 
-Do not use the fallback when cloudflared runs inside Docker and cannot reach host loopback.
+Never bind the app to a public `0.0.0.0` host port.
 
-## 7. Cloudflare Tunnel configuration
+## Cloudflare Tunnel
 
-Use the existing tunnel named:
+Use the existing tunnel `elrace-web`. Add only:
 
-`elrace-web`
-
-Add only this new public hostname:
-
-- Subdomain: `cv`
-- Domain: `elrace.com`
 - Hostname: `cv.elrace.com`
 - Service type: `HTTP`
 - Service URL: `http://elrace-cv-app:3000` when using the shared Docker network
 
-Cloudflare safety rules:
+Do not create a second tunnel. Do not replace the tunnel. Do not delete, overwrite, or alter existing public hostnames. If using an ingress YAML file, back it up, preserve every existing rule exactly, and add the CV rule before the final catch-all rule.
 
-- Do not create a second tunnel.
-- Do not replace the existing tunnel.
-- Do not delete or edit existing public hostnames.
-- Do not overwrite the complete ingress configuration.
-- Add only the new `cv.elrace.com` route.
-- If editing a YAML ingress file, preserve every existing rule exactly and insert the new rule before the final catch-all rule.
-- Back up the tunnel configuration before editing it.
-- Validate the configuration before reloading cloudflared.
-- Reload or restart cloudflared only when required, and only after confirming the existing hostnames will remain unchanged.
+## Mandatory plan before server changes
 
-## 8. Mandatory pre-deployment check
+Before changing the VPS or Cloudflare, report:
 
-Before making any VPS or Cloudflare change, produce a short deployment plan containing only:
-
-- Existing tunnel runtime: host service or Docker container
+- Whether cloudflared runs on the host or in Docker
 - Existing tunnel network name
-- Proposed CV container network connection
+- Proposed CV network connection
 - Proposed origin URL
-- Whether a loopback port is required
-- Exact files that will be created or changed
-- Exact service or container that would need reloading
-- Rollback commands
+- Whether loopback port `3015` is required
+- Exact files and services that would change
+- Exact rollback commands
 
-Do not perform deployment changes until this plan is explicitly approved.
+Stop and wait for explicit approval before deployment.
 
-## 9. Verification
+## Verification
 
-After deployment, verify:
+Verify that:
 
-- `https://cv.elrace.com` loads successfully.
+- `https://cv.elrace.com` loads.
 - The page is English-only and responsive.
-- Full name and file number are required.
-- PDF, DOC, and DOCX files are accepted.
-- Files larger than 50 MB are rejected.
-- A valid CV reaches the correct Google Drive folder.
-- The stored filename follows `<employee-file-number> - <full-name>.<extension>`.
-- The success message appears only after confirmed upload.
-- The browser never receives Google credentials or Drive identifiers.
-- Existing tunnel hostnames still work exactly as before.
-- Existing containers and applications were not restarted or changed.
-- No new public VPS port was opened.
+- Only full name, file number, and CV are requested.
+- PDF, DOC, and DOCX work up to 50 MB.
+- The CV reaches the correct Drive folder with the required filename.
+- Success appears only after confirmed upload.
+- No Google credentials or Drive identifiers reach the browser.
+- Existing tunnel hostnames and applications still work unchanged.
+- No public VPS port was opened.
 
-## 10. Rollback
+Rollback must remove only the `cv.elrace.com` route and stop only the `elrace-cv` Compose project. Leave every existing program and configuration untouched.
 
-Rollback must affect only this project:
-
-1. Remove only the `cv.elrace.com` public hostname from `elrace-web`.
-2. Stop only the `elrace-cv` Docker Compose project.
-3. Remove only the `elrace-cv-app` container and project-specific image if required.
-4. Leave every existing application, tunnel hostname, container, network, volume, proxy, and configuration untouched.
-
-## 11. Documentation and completion
-
-The README must explain only:
-
-1. Local installation and testing.
-2. Google Drive API and service-account setup.
-3. Environment variables.
-4. Building and running the isolated Docker project on Contabo.
-5. Connecting the app to the existing `elrace-web` tunnel.
-6. Adding only `cv.elrace.com`.
-7. Testing a successful upload.
-8. Safe rollback.
-
-Do not use GitHub Pages or Vercel. The application must run on the Contabo VPS through the existing Cloudflare Tunnel.
-
-Implement the project completely. Run lint, type checking, tests, and a production build. Fix every failure. Do not deploy or alter the VPS until the mandatory pre-deployment plan is reviewed and explicitly approved.
+Do not use GitHub Pages or Vercel. Build for the Contabo VPS and the existing `elrace-web` Cloudflare Tunnel.
