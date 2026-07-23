@@ -14,11 +14,25 @@ The employee must only:
 4. Click `Submit Updated CV`.
 5. See a success confirmation after Google Drive confirms the upload.
 
-HR will manage all files directly in Google Drive.
+HR will manage all uploaded files directly in Google Drive.
+
+## Official logo asset
+
+Use the exact uploaded company logo located at:
+
+`public/assets/elrace-logo.png`
+
+Requirements:
+
+- This PNG file is the official EL RACE logo supplied by the project owner.
+- Use this file directly; do not redraw, recreate, replace, trace, recolor, crop, distort, or generate a substitute logo.
+- Preserve the transparent background, original aspect ratio, proportions, and visual quality.
+- Display it prominently near the top of the page without making it excessively large.
+- Use responsive dimensions and prevent layout shift by defining width and height.
+- Use descriptive alt text: `EL RACE Contracting`
+- Do not use the previous SVG logo path.
 
 ## Design
-
-Use `public/assets/elrace-logo.svg` and preserve its proportions.
 
 Brand colors:
 
@@ -64,13 +78,15 @@ Upload area:
 
 - `Drag and drop your CV here`
 - `or choose a file from your device`
-- `PDF, DOC, or DOCX — maximum 50 MB`
+- `PDF, DOC, or DOCX — Maximum 50 MB`
 
-Show selected filename, file size, and remove or replace action.
+Show selected filename, file size, and a remove or replace action.
 
 Uploading state:
 
 `Uploading your CV...`
+
+Disable duplicate submissions while uploading.
 
 Success state:
 
@@ -84,13 +100,13 @@ Use short safe validation messages. Never expose technical or Google Drive error
 
 Use a server-side API. The browser must never receive Google credentials, Drive IDs, folder links, or uploaded-file links.
 
-Target folder ID:
+Target Google Drive folder ID:
 
 `1bDjbuIAjneyY-y0D1o5EGtOvkc_TaKIn`
 
 Server-only environment variables:
 
-```env
+```denv
 GOOGLE_SERVICE_ACCOUNT_EMAIL=
 GOOGLE_PRIVATE_KEY=
 GOOGLE_DRIVE_FOLDER_ID=1bDjbuIAjneyY-y0D1o5EGtOvkc_TaKIn
@@ -112,7 +128,7 @@ Upload rules:
 
 ## Implementation
 
-Use Next.js App Router, TypeScript, Tailwind CSS, Node.js runtime for upload, Google Drive API, minimal maintained dependencies, and simple client/server validation.
+Use Next.js App Router, TypeScript, Tailwing CSS, Node.js runtime for upload, Google Drive API, minimal maintained dependencies, and simple client/server validation.
 
 Create:
 
@@ -137,26 +153,26 @@ The server contents must not be assumed to be empty, current, disposable, or ide
 
 Read-only inspection must include:
 
-- `pwd` and a safe directory listing of `/root/CV App`, including hidden files.
-- File tree, file sizes, ownership, permissions, and modification times.
+- `pwd` and a safe listing of `/root/CV App`, including hidden files.
+- File tree, sizes, ownership, permissions, and modification times.
 - Whether `/root/CV App` is already a Git repository.
 - Current Git remote, branch, commit, status, tracked changes, untracked files, and ignored files when Git exists.
-- Existing `Dockerfile`, Compose files, `.dockerignore`, `.gitignore`, package files, lockfiles, application source, proxy-related files, deployment scripts, and README files.
+- Existing Docker, Compose, ignore, package, lock, source, proxy, deployment, and README files.
 - Existing `.env` presence, path, owner, and permissions without printing secret values.
-- Existing containers, images, Compose project labels, container names, mounted paths, networks, and volumes related to this directory or proposed project name.
-- Differences between the current GitHub repository and `/root/CV App` using filenames and checksums or Git diff where possible.
+- Existing containers, images, Compose project labels, mounted paths, networks, and volumes related to this directory or proposed project name.
+- Differences between GitHub and `/root/CV App` using filenames and checksums or Git diff where possible.
 
-Then produce a reconciliation report containing:
+Produce a reconciliation report containing:
 
-1. Files that exist only in GitHub.
-2. Files that exist only on the server.
+1. Files only in GitHub.
+2. Files only on the server.
 3. Files present in both but different.
-4. Existing server files that must be preserved.
-5. Existing server files that appear obsolete, without deleting them.
-6. Whether the GitHub project can be safely deployed as-is.
-7. The exact proposed synchronization method.
-8. The exact files that would be created, replaced, preserved, moved, or backed up.
-9. The exact rollback procedure.
+4. Server files that must be preserved.
+5. Files that appear obsolete, without deleting them.
+6. Whether deployment is safe as-is.
+7. Exact synchronization method.
+8. Exact files to create, replace, preserve, move, or back up.
+9. Exact rollback procedure.
 
 Reconciliation rules:
 
@@ -164,19 +180,17 @@ Reconciliation rules:
 - Never run `git reset --hard`, `git clean`, `rm -rf`, destructive `rsync --delete`, or any command that removes unknown server content.
 - Never replace or delete `/root/CV App/.env`.
 - Never print, commit, upload, or expose secret values.
-- Preserve server-only operational files unless their removal is explicitly approved.
-- Preserve any valid server changes that are not yet in GitHub and report them clearly.
-- When equivalent files differ, determine why before choosing either version.
-- Treat the server architecture and active runtime configuration as the deployment source of truth, while treating GitHub as the application source of truth.
-- Adapt the project files to the verified server architecture rather than forcing assumed networking, paths, container settings, or proxy behavior.
-- Create a timestamped backup of every existing file that would be changed before changing it.
+- Preserve server-only operational files unless explicitly approved otherwise.
+- Preserve valid server changes that are not yet in GitHub and report them.
+- Determine why equivalent files differ before choosing a version.
+- Treat active server architecture as deployment source of truth and GitHub as application source of truth.
+- Adapt project files to the verified server architecture rather than forcing assumptions.
+- Create a timestamped backup of every existing file that would be changed.
 - Stop and wait for explicit approval after the reconciliation report. Do not synchronize, build, deploy, restart, reload, or modify anything before approval.
 
 ## Existing server architecture
 
-The application will be deployed on the existing Contabo VPS using the current EL RACE publishing architecture.
-
-Use these exact values only after confirming them against the server inspection:
+Confirm these values against the server inspection before using them:
 
 - Server project directory: `/root/CV App`
 - Docker Compose project name: `elrace-cv`
@@ -184,25 +198,21 @@ Use these exact values only after confirming them against the server inspection:
 - Application internal port: `3000`
 - Public hostname: `cv.elrace.com`
 - Existing Cloudflare Tunnel: `elrace-web`
-- Existing published application origin: `http://edge-proxy:80`
+- Existing published origin: `http://edge-proxy:80`
 
-The path contains a space. Quote it in shell commands, for example:
+The path contains a space. Quote it in shell commands:
 
 ```bash
 cd "/root/CV App"
 ```
 
-Keep production secrets only in:
-
-`/root/CV App/.env`
-
-Set the file permission to `600`. Never commit production secrets.
+Keep production secrets only in `/root/CV App/.env`, set permission `600`, and never commit them.
 
 ## Required routing architecture
 
-Do not point the Cloudflare Tunnel directly to the CV application container.
+Do not point Cloudflare Tunnel directly to the CV application container.
 
-Use this flow only after confirming that it matches the active server architecture:
+Use this flow only after confirming it matches the active server architecture:
 
 ```text
 cv.elrace.com
@@ -214,78 +224,71 @@ cv.elrace.com
 
 Cloudflare configuration:
 
-- Add only the public hostname `cv.elrace.com` to the existing tunnel `elrace-web`.
+- Add only `cv.elrace.com` to the existing `elrace-web` tunnel.
 - Service type: `HTTP`.
 - Service URL: `http://edge-proxy:80`.
-- Do not create another tunnel.
-- Do not replace or recreate `elrace-web`.
-- Do not alter or delete any existing public hostname.
+- Do not create, replace, or recreate a tunnel.
+- Do not alter or delete existing public hostnames.
 
 Edge proxy configuration:
 
-- Inspect the current edge-proxy implementation and configuration in read-only mode first.
+- Inspect the current implementation and configuration read-only first.
 - Determine whether it uses Nginx, Caddy, Traefik, or another router.
 - Back up the exact configuration file before changing it.
 - Preserve every existing route exactly.
-- Add only one host rule for `cv.elrace.com` that proxies to `http://elrace-cv-app:3000`.
-- Preserve the original `Host` header and standard forwarded headers.
-- Configure the upload/body limit so a 50 MB CV can pass safely; use a small margin above 50 MB when the proxy requires it.
-- Validate the proxy configuration before applying it.
-- Prefer a graceful configuration reload rather than restarting the edge proxy.
-- If a full edge-proxy restart would be required, stop and request explicit approval before doing it.
+- Add only one host rule for `cv.elrace.com` pointing to `http://elrace-cv-app:3000`.
+- Preserve the original Host header and standard forwarded headers.
+- Configure the upload/body limit with a safe margin above 50 MB.
+- Validate proxy configuration before applying it.
+- Prefer a graceful reload.
+- If a full proxy restart is required, stop and request explicit approval.
 
 Docker networking:
 
-- Inspect the Docker network currently used by `edge-proxy`.
-- Attach only `elrace-cv-app` to that existing network as an external network in the CV project's Compose file.
-- Do not recreate, rename, or remove the existing network.
-- Do not publish a host port for the CV application.
-- Do not bind the CV application to `0.0.0.0` on the host.
-- Confirm that `edge-proxy` can resolve `elrace-cv-app` and reach port `3000` before adding the public hostname.
+- Inspect the network currently used by `edge-proxy`.
+- Attach only `elrace-cv-app` to that existing network as an external network.
+- Do not recreate, rename, or remove that network.
+- Do not publish a host port.
+- Do not bind the application publicly to `0.0.0.0`.
+- Confirm `edge-proxy` resolves `elrace-cv-app` and reaches port `3000` before adding the hostname.
 
 ## Isolation and safety
-
-The CV application must remain isolated from all existing programs.
 
 Do not:
 
 - Stop, restart, rebuild, delete, or reconfigure unrelated containers.
 - Run `docker system prune`.
 - Run a global `docker compose down`.
-- Modify unrelated Compose projects.
-- Modify existing databases or volumes.
-- Modify unrelated proxy routes.
-- Modify unrelated Cloudflare hostnames.
-- Modify firewall rules, public ports, Nginx sites, Apache sites, application files, or DNS records unrelated to `cv.elrace.com`.
-- Recreate the existing edge proxy, Cloudflare Tunnel, or Docker network.
+- Modify unrelated Compose projects, databases, volumes, proxy routes, Cloudflare hostnames, firewall rules, public ports, Nginx sites, Apache sites, application files, DNS records, tunnels, or networks.
 
-All Docker commands must target only the `elrace-cv` Compose project. The only permitted shared-infrastructure change is adding the single `cv.elrace.com` route to the existing edge proxy and adding the single public hostname to `elrace-web`.
+All Docker commands must target only the `elrace-cv` Compose project. The only permitted shared-infrastructure changes are adding the single `cv.elrace.com` route to the existing edge proxy and adding the single public hostname to `elrace-web`.
 
 ## Mandatory plan before server changes
 
-Before modifying the VPS, edge proxy, or Cloudflare, perform the repository/server reconciliation and read-only infrastructure inspection, then report:
+Before modifying the VPS, edge proxy, or Cloudflare, report:
 
-- The exact state and differences between GitHub and `/root/CV App`.
-- The exact synchronization method and backup plan.
-- The exact edge-proxy container and technology.
-- The exact edge-proxy configuration file that requires one added route.
-- The existing Docker network name shared by `edge-proxy`.
-- The proposed Compose network declaration for `elrace-cv-app`.
+- Exact differences between GitHub and `/root/CV App`.
+- Exact synchronization method and backup plan.
+- Exact edge-proxy container and technology.
+- Exact edge-proxy configuration file requiring one route.
+- Existing Docker network name shared by `edge-proxy`.
+- Proposed Compose external-network declaration.
 - Confirmation that no host port will be published.
 - Confirmation that Cloudflare will use `http://edge-proxy:80`.
-- The exact files and services that would change.
-- Whether a graceful edge-proxy reload is available.
+- Exact files and services that would change.
+- Whether graceful proxy reload is available.
 - Exact rollback commands.
 
-Stop and wait for explicit approval before any synchronization, build, deployment, server, edge-proxy, or Cloudflare change.
+Stop and wait for explicit approval before synchronization, build, deployment, server, edge-proxy, or Cloudflare changes.
 
 ## Verification
 
 Verify that:
 
-- The deployed server files match the approved reconciled project state.
+- Deployed files match the approved reconciled state.
 - No server-only or secret file was lost or overwritten.
 - `https://cv.elrace.com` loads through `http://edge-proxy:80`.
+- The official logo loads from `/assets/elrace-logo.png` without distortion or replacement.
 - The page is English-only and responsive.
 - Only full name, file number, and CV are requested.
 - PDF, DOC, and DOCX work up to 50 MB.
@@ -293,15 +296,15 @@ Verify that:
 - The CV reaches the correct Drive folder with the required filename.
 - Success appears only after confirmed upload.
 - No Google credentials or Drive identifiers reach the browser.
-- All existing applications and tunnel hostnames still work unchanged.
+- Existing applications and tunnel hostnames remain unchanged.
 - No public VPS port was opened.
 
 Rollback must:
 
-1. Restore only the backed-up CV project or proxy files changed during the approved deployment.
+1. Restore only backed-up CV project or proxy files changed during the approved deployment.
 2. Remove only the `cv.elrace.com` rule from the edge proxy.
 3. Remove only the `cv.elrace.com` public hostname from `elrace-web`.
 4. Stop and remove only the `elrace-cv` Compose project.
-5. Leave every existing program, proxy route, tunnel hostname, network, database, server-only file, secret, and configuration untouched.
+5. Leave every other program, route, hostname, network, database, server-only file, secret, and configuration untouched.
 
 Do not use GitHub Pages or Vercel. Build for the reconciled contents of `/root/CV App`, the existing Contabo VPS, the existing `edge-proxy`, and the existing `elrace-web` Cloudflare Tunnel.
