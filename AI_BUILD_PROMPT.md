@@ -1,70 +1,139 @@
-# EL RACE Temporary CV Upload Page — Build Prompt
+# EL RACE Temporary CV Upload Page — Final Build Prompt
 
-Build the complete working project in this repository. The page is a temporary HR tool and must remain simple, fast, professional, and English-only.
+Build the complete working project in this repository. This is a temporary HR page for employees to submit updated CVs. Keep the experience extremely simple, but make the visual design polished, modern, premium, and clearly associated with EL RACE.
 
-## Purpose
+## Scope
 
-Create one public page that any EL RACE employee can open without signing in. The employee enters their full name, employee file number, selects their CV, and submits it. The backend uploads the CV directly to the HR Google Drive folder. HR will manage the files directly in Google Drive, so do not build an admin panel, employee account, login page, file browser, dashboard, database, or HR interface.
+Create one public English-only page. No login, employee account, dashboard, admin panel, database, file browser, HR interface, navigation menu, or extra pages.
 
-## Required page
+The employee must only:
 
-Use the supplied EL RACE logo at:
+1. Enter their full name.
+2. Enter their employee file number.
+3. Select or drag and drop their CV.
+4. Submit it.
+5. See a clear success confirmation.
+
+The backend uploads the file directly to the HR Google Drive folder. HR will manage all files directly in Google Drive.
+
+## Branding
+
+Use the supplied logo:
 
 `public/assets/elrace-logo.svg`
 
-Create a clean responsive page using EL RACE navy, red, white, and a light neutral background.
+Use the logo naturally and preserve its proportions.
 
-Display this content:
+Primary visual colors:
 
-### Heading
+- EL RACE navy: `#29357E`
+- EL RACE red: `#CE363A`
+- White: `#FFFFFF`
+- Soft cool background: `#F5F7FB`
+- Dark text: `#171A24`
+
+## Design direction
+
+The page must look professionally designed, current, and production quality rather than like a basic generated form.
+
+Use:
+
+- A refined full-page composition with strong spacing and hierarchy.
+- A premium centered upload card or an elegant two-column desktop layout that becomes one column on mobile.
+- A restrained branded background using very subtle architectural lines, grid geometry, or construction-inspired details.
+- Clean typography with a modern corporate character.
+- Soft shadows, precise borders, balanced white space, and consistent corner radii.
+- A visually strong drag-and-drop upload area.
+- Small relevant icons only where they improve clarity.
+- Subtle hover, focus, upload, and success transitions.
+- Excellent mobile layout and touch targets.
+
+Do not use excessive gradients, glassmorphism, illustrations, stock images, animated backgrounds, decorative clutter, multiple cards, unnecessary sections, or generic template content.
+
+The design should feel advanced and premium while the actual user flow remains immediate and obvious.
+
+## Page copy
+
+Keep all writing short and directly related to the CV update request.
+
+### Eyebrow
+
+`Employee Records Update`
+
+### Main heading
 
 `Update Your CV`
 
-### Instruction text
+### Introductory text
 
-`Kindly update your CV to reflect your current job position, latest responsibilities, qualifications, certifications, and any other recent professional achievements.`
+`Please submit your latest CV so your employee record reflects your current position, responsibilities, qualifications, certifications, and recent professional achievements.`
 
-`Please rename your CV using your employee file number before uploading it.`
+### Deadline notice
 
-`Submit your updated CV no later than Sunday, 26 July 2026.`
+`Submission deadline: Sunday, 26 July 2026`
 
-### Form fields
+Present the deadline as a compact, clearly visible notice without making the page look alarming.
 
-Only include:
+### File naming note
 
-1. `Full Name` — required
-2. `Employee File Number` — required
-3. `Upload CV` — required
+`Please rename your CV using your employee file number before uploading.`
 
-Accepted file types:
+### Form labels
 
-- PDF
-- DOC
-- DOCX
+- `Full Name`
+- `Employee File Number`
+- `Upload CV`
 
-Maximum file size: 50 MB.
+Use short placeholders only:
 
-Show the selected filename and a simple remove or replace option.
+- `Enter your full name`
+- `Enter your file number`
 
-Use one primary button:
+### Upload area copy
+
+Primary:
+
+`Drag and drop your CV here`
+
+Secondary:
+
+`or choose a file from your device`
+
+Helper text:
+
+`PDF, DOC, or DOCX — maximum 50 MB`
+
+Show the selected filename, file size, and a simple replace or remove action.
+
+### Submit button
 
 `Submit Updated CV`
 
-While uploading, disable the form and show:
+### Uploading state
 
 `Uploading your CV...`
 
-After the Google Drive upload is confirmed, replace the form with:
+Disable all duplicate submissions while uploading.
+
+### Success state
+
+Replace the form with a polished success panel only after Google Drive confirms the upload.
+
+Heading:
 
 `Your CV has been submitted successfully.`
 
-Also show:
+Supporting text:
 
-`Thank you for updating your information.`
+`Thank you for keeping your employee information up to date.`
 
-Provide a small `Submit Another CV` button.
+Secondary action:
 
-For errors, show short clear messages such as:
+`Submit Another CV`
+
+### Error messages
+
+Use short safe messages:
 
 - `Please enter your full name.`
 - `Please enter your employee file number.`
@@ -72,17 +141,19 @@ For errors, show short clear messages such as:
 - `The file must not exceed 50 MB.`
 - `The upload could not be completed. Please try again.`
 
-## Google Drive upload
+Do not expose technical or Google Drive error details.
 
-Use a server-side API route. The browser must never upload directly to Google Drive and must never receive Google credentials.
+## Google Drive integration
 
-Target Google Drive folder ID:
+Use a server-side API route. The browser must never receive Google credentials and must never upload directly to Google Drive.
+
+Target folder ID:
 
 `1bDjbuIAjneyY-y0D1o5EGtOvkc_TaKIn`
 
-Read the folder ID from the server environment variable `GOOGLE_DRIVE_FOLDER_ID`. Do not hardcode credentials or private keys.
+Read it from the server environment variable `GOOGLE_DRIVE_FOLDER_ID`.
 
-Use a Google service account and these server-only environment variables:
+Use these server-only environment variables:
 
 ```env
 GOOGLE_SERVICE_ACCOUNT_EMAIL=
@@ -93,14 +164,18 @@ MAX_CV_SIZE_MB=50
 
 The Google Drive folder must be shared with the service-account email as Editor.
 
-When saving the file to Google Drive:
+When saving the file:
 
-- Sanitize the employee file number.
-- Preserve the valid original extension.
+- Validate the full name and employee file number on the server.
+- Accept only PDF, DOC, and DOCX.
+- Enforce the 50 MB limit on both client and server.
+- Configure the hosting/server request limit so files up to 50 MB are actually accepted.
+- Sanitize the employee file number and full name.
+- Preserve only a valid extension.
 - Rename the stored file to `<employee-file-number> - <full-name>.<extension>`.
-- Never expose the Drive file ID, folder link, or uploaded-file link to the employee.
-- Do not create any API route for listing, viewing, searching, downloading, or deleting files.
-- Do not allow the public page to display existing uploads.
+- Never return the Drive file ID, folder URL, or uploaded-file URL to the employee.
+- Never create list, search, preview, download, edit, or delete endpoints.
+- Never display existing files on the public page.
 
 ## Technical implementation
 
@@ -109,23 +184,24 @@ Use:
 - Next.js App Router
 - TypeScript
 - Tailwind CSS
-- A server-side Google Drive API integration
-- Simple server-side validation
+- Server-side Google Drive API integration
+- Minimal maintained dependencies
+- Simple client-side and server-side validation
 
-Do not add unnecessary packages or features.
+Do not add features outside this scope.
 
-Configure the application server, reverse proxy, and deployment platform to accept multipart uploads of at least 50 MB. Do not claim 50 MB support unless an actual near-limit upload is tested successfully in the deployed environment.
+## Quality requirements
 
-The design must be:
+- English-only.
+- Fully responsive from small phones to large desktop screens.
+- Accessible labels, keyboard navigation, visible focus states, and status announcements.
+- No horizontal overflow or layout shift.
+- Fast initial load.
+- Clear disabled and loading states.
+- Success must appear only after a confirmed Google Drive upload.
+- Test a real or mocked upload close to 50 MB so the full request path is verified.
 
-- English-only
-- Mobile-first and fully responsive
-- One centered professional form card
-- Clear and easy for non-technical employees
-- Accessible by keyboard
-- Free from excessive animation, gradients, illustrations, multiple steps, language selectors, menus, dashboards, and unnecessary text
-
-## Required files and documentation
+## Required project files
 
 Create the complete application, including:
 
@@ -135,18 +211,19 @@ Create the complete application, including:
 - `.env.example`
 - `.gitignore`
 - `README.md`
-- Basic validation tests
+- Basic validation and upload tests
 
-The README must explain only the necessary setup:
+The README should explain only:
 
-1. Install and run locally.
-2. Enable Google Drive API.
-3. Create a Google service account.
-4. Share the target folder with the service-account email as Editor.
-5. Configure environment variables.
-6. Deploy the project to a server-side platform configured for 50 MB uploads.
-7. Test one normal CV upload and one near-50-MB upload.
+1. Installation and local run commands.
+2. Enabling the Google Drive API.
+3. Creating a Google service account.
+4. Sharing the target folder with the service-account email as Editor.
+5. Configuring environment variables.
+6. Configuring the deployment platform for 50 MB uploads.
+7. Deploying the project.
+8. Testing one successful upload.
 
-Do not use GitHub Pages because the Google Drive credentials require a secure server-side environment.
+Do not use GitHub Pages because secure Google Drive credentials and file uploads require a server-side runtime.
 
-Implement the project completely, run lint, type checking, tests, and production build, fix all failures, then provide a concise report of the files created, checks passed, and the remaining Google/deployment configuration steps.
+Implement the project completely. Run lint, type checking, tests, and a production build. Fix every failure. Finish with a concise report listing files created, checks passed, and only the remaining Google Drive and hosting configuration steps.
