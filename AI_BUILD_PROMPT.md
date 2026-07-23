@@ -31,7 +31,7 @@ Keep dependencies minimal and maintained. Do not use a database for this version
 
 ## Branding and visual direction
 
-Use the company logo at `public/assets/elrace-logo.png`.
+Use the supplied company logo at `public/assets/elrace-logo.svg`. It contains the original uploaded PNG artwork embedded without visual changes.
 
 Brand colors extracted from the supplied logo:
 
@@ -115,7 +115,7 @@ Requirements:
 8. Generate a safe stored filename in this form:
    `CV_<sanitized-employee-id>_<sanitized-full-name>_<UTC-timestamp>.<ext>`
 9. Upload through the Google Drive API to the configured private target folder.
-10. Set the uploaded Drive file to private. Do not create public permissions.
+10. Keep the uploaded Drive file private. Do not create public permissions.
 11. Store useful non-secret metadata through Drive `appProperties`, including employee ID, normalized email, upload timestamp, and generated reference code.
 12. Do not return the Google Drive file ID or URL to the browser.
 13. Return only a structured success response containing the safe reference code and timestamp.
@@ -159,6 +159,8 @@ MAX_CV_SIZE_MB=10
 
 Handle escaped newlines in `GOOGLE_PRIVATE_KEY` correctly. Validate required environment variables at server startup or first API use with a clear configuration error that is never exposed in detail to public users.
 
+Do not hardcode the supplied Google Drive folder link or folder ID in the repository. The owner will place the target folder ID in the deployment environment variable after the folder has been made private.
+
 ## Repository structure
 
 Use a clean maintainable structure similar to:
@@ -184,7 +186,7 @@ messages/
   en.ts
   ar.ts
 public/
-  assets/elrace-logo.png
+  assets/elrace-logo.svg
 tests/
   unit/
   e2e/
