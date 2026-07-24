@@ -29,7 +29,7 @@ import path from "node:path";
 import { google } from "googleapis";
 
 const SCOPES = ["https://www.googleapis.com/auth/drive.file"];
-const TIMEOUT_MS = 5 * 60 * 1000;
+const TIMEOUT_MS = 15 * 60 * 1000;
 
 const projectRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const envPath = path.join(projectRoot, ".env");
