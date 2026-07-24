@@ -2,17 +2,119 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
 html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
 }
 
 body {
-  background-color: #f5f7fb;
   color: #171a24;
+  /* Layered ambient gradient — soft navy/red light bloom over a cool paper base. */
+  background-color: #f5f7fb;
+  background-image:
+    radial-gradient(1100px 620px at 88% -12%, rgba(41, 53, 126, 0.07), transparent 60%),
+    radial-gradient(880px 520px at -8% 112%, rgba(206, 54, 58, 0.06), transparent 55%),
+    linear-gradient(180deg, #fbfcfe 0%, #eef1f8 100%);
+  background-attachment: fixed;
 }
 
 *:focus-visible {
   outline: 2px solid #29357e;
   outline-offset: 2px;
+}
+
+/* ----------------------------------------------------------------------------
+   Keyframes
+---------------------------------------------------------------------------- */
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(18px) scale(0.985); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes logo-in {
+  from { opacity: 0; transform: translateY(10px) scale(0.9); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes float-idle {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+@keyframes orb-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(46px, -34px) scale(1.08); }
+}
+@keyframes orb-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-40px, 30px) scale(1.1); }
+}
+@keyframes grid-pan {
+  from { transform: translate(0, 0); }
+  to   { transform: translate(-72px, -72px); }
+}
+@keyframes shapes-drift {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-16px) rotate(2.5deg); }
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes bar-indeterminate {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+@keyframes ring-pulse {
+  0%   { transform: scale(0.7); opacity: 0.45; }
+  100% { transform: scale(1.55); opacity: 0; }
+}
+@keyframes check-draw { to { stroke-dashoffset: 0; } }
+@keyframes pop-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+@keyframes success-pop {
+  from { opacity: 0; transform: translateY(10px) scale(0.97); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes eyebrow-line {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* ----------------------------------------------------------------------------
+   Motion utilities.
+   Default (and prefers-reduced-motion) state = final/visible/static.
+   Animations are only introduced inside the no-preference media query, so a
+   reduced-motion visitor always sees fully rendered, non-moving content.
+---------------------------------------------------------------------------- */
+.rise { opacity: 1; }
+.motion-logo { opacity: 1; }
+.eyebrow-rule { transform: scaleX(1); transform-origin: left; }
+.check-path { stroke-dashoffset: 0; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .rise { opacity: 0; animation: rise-in 0.7s var(--ease-out) both; }
+  .motion-logo { opacity: 0; animation: logo-in 0.85s var(--ease-out) both; }
+  .motion-float { animation: float-idle 6.5s ease-in-out infinite; }
+  .eyebrow-rule { transform: scaleX(0); animation: eyebrow-line 0.7s 0.35s var(--ease-out) forwards; }
+
+  .anim-orb-a { animation: orb-a 26s ease-in-out infinite; }
+  .anim-orb-b { animation: orb-b 30s ease-in-out infinite; }
+  .anim-grid { animation: grid-pan 40s linear infinite; }
+  .anim-shapes { animation: shapes-drift 18s ease-in-out infinite; }
+
+  .anim-spin { animation: spin 0.7s linear infinite; }
+  .anim-bar > span { animation: bar-indeterminate 1.15s var(--ease-out) infinite; }
+  .anim-ring { animation: ring-pulse 1.6s ease-out infinite; }
+  .anim-pop { animation: pop-in 0.4s var(--ease-spring) both; }
+  .anim-shake { animation: shake 0.5s var(--ease-out); }
+  .anim-success { animation: success-pop 0.55s var(--ease-out) both; }
+  .check-path { stroke-dashoffset: 42; animation: check-draw 0.55s 0.15s var(--ease-out) forwards; }
 }
