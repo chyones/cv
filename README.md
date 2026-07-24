@@ -9,8 +9,8 @@ folder that HR manages directly.
 - One page: Full Name, Employee File Number, CV upload (PDF/DOC/DOCX, up to
   `MAX_CV_SIZE_MB`).
 - One API route (`/api/upload`) that validates the request and streams the
-  file to Google Drive via a service account. The browser never sees Google
-  credentials, folder IDs, or Drive links.
+  file to Google Drive using OAuth 2.0 user credentials. The browser never
+  sees Google credentials, folder IDs, or Drive links.
 - Files are saved on Drive as `<employee-file-number> - <full-name>.<ext>`.
 
 ## Local development
@@ -23,19 +23,40 @@ npm run dev
 
 ## Google Drive setup
 
-1. In Google Cloud Console, create (or reuse) a project and a **service
-   account**. Create a JSON key for it.
-2. Open the target Drive folder (`GOOGLE_DRIVE_FOLDER_ID` below) and share it
-   with the service account's email address as **Editor**.
-3. Set in `.env`:
-   - `GOOGLE_SERVICE_ACCOUNT_EMAIL` -- the service account's `client_email`.
-   - `GOOGLE_PRIVATE_KEY` -- the service account's `private_key` (keep the
-     `\n` sequences; the app converts them to real newlines at runtime).
-   - `GOOGLE_DRIVE_FOLDER_ID` -- already set to the EL RACE folder.
+The target folder (`GOOGLE_DRIVE_FOLDER_ID` below) lives in a personal
+account's **My Drive** ("My Drive > Staff Updated CVs"). Service accounts
+have no storage quota of their own in a personal My Drive, so this app
+authenticates as that Google account via OAuth 2.0 instead -- uploaded files
+end up owned directly by the account that authorized it.
 
-The service account needs the broad `https://www.googleapis.com/auth/drive`
-scope (not the narrower `drive.file` scope), because the folder is shared
-with it rather than created by it.
+1. In Google Cloud Console, create (or reuse) a project, then go to
+   **APIs & Services > Credentials > Create Credentials > OAuth client ID**.
+   - **Application type: Desktop app.** (Desktop-app clients get an implicit
+     loopback redirect allowance -- there is no redirect URI field to fill
+     in on this screen.)
+2. Set in `.env`:
+   - `GOOGLE_OAUTH_CLIENT_ID` / `GOOGLE_OAUTH_CLIENT_SECRET` -- from the
+     OAuth client created above.
+   - `GOOGLE_DRIVE_FOLDER_ID` -- already set to the EL RACE folder.
+3. Run the one-time authorization helper to obtain
+   `GOOGLE_OAUTH_REFRESH_TOKEN`:
+   ```bash
+   npm run auth:google
+   ```
+   See `scripts/get-refresh-token.mjs` for exact usage (it walks you through
+   an SSH tunnel + a single browser consent as the folder-owning account).
+   The script writes the refresh token straight into `.env` -- it is never
+   printed or displayed.
+4. On the OAuth consent screen (Google Cloud Console > APIs & Services >
+   OAuth consent screen), set **Publishing status** to **In production**.
+   This is what makes the refresh token non-expiring; if left in "Testing"
+   status, Google expires it after 7 days. Because the `drive` scope is
+   sensitive, the one-time consent screen will show an "unverified app"
+   warning -- click through it (Advanced > Go to \[app name]) since you are
+   the account owner authorizing your own app.
+
+Restart the container after the refresh token is saved so it picks up the
+new value: `docker compose up -d --force-recreate app`.
 
 ## Scripts
 

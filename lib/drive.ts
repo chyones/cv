@@ -5,32 +5,28 @@ import type { Readable } from "node:stream";
  * Uploads a single file stream into the configured Drive folder.
  * Never returns or logs the resulting file id/link -- callers only get success/failure.
  *
- * Requires the full "drive" scope (not the narrower "drive.file" scope): the
- * target folder is shared with the service account by the folder owner, it is
- * not created by this app, and "drive.file" cannot see folders it didn't create.
+ * Authenticates as the Google account that authorized OAuth (not a service
+ * account): that account owns the target folder ("My Drive"), so uploaded
+ * files are owned by it directly. The refresh token was minted once via
+ * scripts/get-refresh-token.mjs; googleapis exchanges it for a fresh access
+ * token automatically on every call, no re-authorization needed.
  */
 export async function uploadToDrive(params: {
   filename: string;
   mimeType: string;
   stream: Readable;
 }): Promise<void> {
-  const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  const privateKeyRaw = process.env.GOOGLE_PRIVATE_KEY;
+  const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
+  const refreshToken = process.env.GOOGLE_OAUTH_REFRESH_TOKEN;
   const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
 
-  if (!clientEmail || !privateKeyRaw || !folderId) {
+  if (!clientId || !clientSecret || !refreshToken || !folderId) {
     throw new Error("Google Drive is not configured.");
   }
 
-  const privateKey = privateKeyRaw.includes("\\n")
-    ? privateKeyRaw.replace(/\\n/g, "\n")
-    : privateKeyRaw;
-
-  const auth = new google.auth.JWT({
-    email: clientEmail,
-    key: privateKey,
-    scopes: ["https://www.googleapis.com/auth/drive"],
-  });
+  const auth = new google.auth.OAuth2(clientId, clientSecret);
+  auth.setCredentials({ refresh_token: refreshToken });
 
   const drive = google.drive({ version: "v3", auth });
 

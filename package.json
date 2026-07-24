@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "auth:google": "node scripts/get-refresh-token.mjs"
   },
   "dependencies": {
     "next": "^15.0.0",
