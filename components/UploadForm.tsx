@@ -199,12 +199,12 @@ export function UploadForm() {
     <form
       onSubmit={onSubmit}
       noValidate
-      className="relative overflow-hidden rounded-2xl border border-navy/10 bg-white/95 p-6 shadow-card-lg backdrop-blur-sm sm:p-8"
+      className="relative overflow-hidden rounded-2xl border border-navy/10 bg-white/95 p-6 shadow-card-lg backdrop-blur-sm sm:p-7"
     >
       {/* Slim brand accent along the card's top edge */}
       <span className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-navy via-navy to-red" />
 
-      <div className="grid gap-5 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-2">
         <div className="group">
           <label htmlFor="fullName" className="mb-1.5 block text-sm font-medium text-ink">
             Full Name
@@ -242,7 +242,7 @@ export function UploadForm() {
         </div>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-4">
         <span className="mb-1.5 block text-sm font-medium text-ink">Upload CV</span>
         <div
           onDragOver={(e) => {
@@ -251,7 +251,7 @@ export function UploadForm() {
           }}
           onDragLeave={() => setDragActive(false)}
           onDrop={onDrop}
-          className={`group relative rounded-xl border-2 border-dashed px-6 py-8 text-center transition-all duration-200 focus-within:ring-4 focus-within:ring-navy/10 ${
+          className={`group relative rounded-xl border-2 border-dashed px-6 py-6 text-center transition-all duration-200 focus-within:ring-4 focus-within:ring-navy/10 ${
             dragActive
               ? "border-navy bg-navy/[0.05] motion-safe:scale-[1.01]"
               : file
@@ -317,7 +317,7 @@ export function UploadForm() {
             </div>
           ) : (
             <div className="flex flex-col items-center">
-              <span className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-navy/[0.06] text-navy transition-all duration-200 group-hover:bg-navy/10 motion-safe:group-hover:-translate-y-0.5">
+              <span className="mb-2.5 flex h-11 w-11 items-center justify-center rounded-full bg-navy/[0.06] text-navy transition-all duration-200 group-hover:bg-navy/10 motion-safe:group-hover:-translate-y-0.5">
                 <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" aria-hidden="true">
                   <path
                     d="M12 16V4m0 0L8 8m4-4l4 4"
@@ -365,7 +365,7 @@ export function UploadForm() {
       <button
         type="submit"
         disabled={busy}
-        className="group relative mt-6 inline-flex w-full items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-navy to-navy-800 px-5 py-3 text-sm font-semibold text-white shadow-btn transition-all duration-200 hover:shadow-lg motion-safe:hover:-translate-y-0.5 motion-safe:active:translate-y-0 motion-safe:active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy disabled:cursor-not-allowed disabled:opacity-70 disabled:shadow-none sm:w-auto"
+        className="group relative mt-5 inline-flex w-full items-center justify-center overflow-hidden rounded-lg bg-gradient-to-br from-navy to-navy-800 px-5 py-3 text-sm font-semibold text-white shadow-btn transition-all duration-200 hover:shadow-lg motion-safe:hover:-translate-y-0.5 motion-safe:active:translate-y-0 motion-safe:active:scale-[0.99] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-navy disabled:cursor-not-allowed disabled:opacity-70 disabled:shadow-none sm:w-auto"
       >
         {/* Sheen sweep on hover */}
         <span className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 -skew-x-12 bg-white/20 opacity-0 transition-all duration-500 ease-out group-hover:left-[110%] group-hover:opacity-100 motion-reduce:hidden" />
