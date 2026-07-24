@@ -4,7 +4,7 @@ import { UploadForm } from "@/components/UploadForm";
 
 export default function Page() {
   return (
-    <main className="relative isolate flex min-h-screen items-center justify-center px-4 py-8 sm:py-10">
+    <main className="relative isolate flex min-h-screen items-center justify-center px-4 py-6">
       <BackgroundGeometry />
 
       <div className="w-full max-w-xl">
@@ -58,7 +58,7 @@ export default function Page() {
         </div>
 
         <p
-          className="rise mt-6 flex items-center justify-center gap-1.5 text-center text-xs text-ink/50"
+          className="rise mt-4 flex items-center justify-center gap-1.5 text-center text-xs text-ink/50"
           style={{ animationDelay: "0.42s" }}
         >
           <svg viewBox="0 0 24 24" className="h-3.5 w-3.5 text-ink/40" fill="none" aria-hidden="true">
