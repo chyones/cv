@@ -26,9 +26,6 @@ export default function Page() {
             Please submit your latest CV so your employee record reflects your current position,
             responsibilities, qualifications, certifications, and recent professional achievements.
           </p>
-          <p className="mt-3 text-sm font-medium text-navy">
-            Submission deadline: Sunday, 26 July 2026
-          </p>
         </div>
 
         <UploadForm />
