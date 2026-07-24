@@ -17,9 +17,9 @@ body {
   /* Layered ambient gradient — soft navy/red light bloom over a cool paper base. */
   background-color: #f5f7fb;
   background-image:
-    radial-gradient(1100px 620px at 88% -12%, rgba(41, 53, 126, 0.07), transparent 60%),
-    radial-gradient(880px 520px at -8% 112%, rgba(206, 54, 58, 0.06), transparent 55%),
-    linear-gradient(180deg, #fbfcfe 0%, #eef1f8 100%);
+    radial-gradient(1100px 620px at 88% -12%, rgba(41, 53, 126, 0.08), transparent 60%),
+    radial-gradient(880px 520px at -8% 112%, rgba(206, 54, 58, 0.07), transparent 55%),
+    linear-gradient(180deg, #fbfcfe 0%, #eceff8 100%);
   background-attachment: fixed;
 }
 
@@ -36,28 +36,46 @@ body {
   to   { opacity: 1; transform: none; }
 }
 @keyframes logo-in {
-  from { opacity: 0; transform: translateY(10px) scale(0.9); }
+  from { opacity: 0; transform: translateY(12px) scale(0.9); }
   to   { opacity: 1; transform: none; }
 }
+/* Continuous logo float — clearly visible vertical drift. */
 @keyframes float-idle {
   0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-6px); }
+  50%      { transform: translateY(-14px); }
 }
+/* Breathing halo behind the logo. */
+@keyframes logo-glow {
+  0%, 100% { opacity: 0.45; transform: translate(-50%, -50%) scale(1); }
+  50%      { opacity: 0.9;  transform: translate(-50%, -50%) scale(1.16); }
+}
+/* Drifting ambient colour orbs — large travel so the motion reads clearly. */
 @keyframes orb-a {
   0%, 100% { transform: translate(0, 0) scale(1); }
-  50%      { transform: translate(46px, -34px) scale(1.08); }
+  50%      { transform: translate(90px, -64px) scale(1.18); }
 }
 @keyframes orb-b {
   0%, 100% { transform: translate(0, 0) scale(1); }
-  50%      { transform: translate(-40px, 30px) scale(1.1); }
+  50%      { transform: translate(-80px, 56px) scale(1.22); }
 }
+@keyframes orb-c {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(54px, 66px) scale(1.14); }
+}
+/* Blueprint grid pans more than a full tile so movement is obvious. */
 @keyframes grid-pan {
   from { transform: translate(0, 0); }
-  to   { transform: translate(-72px, -72px); }
+  to   { transform: translate(-96px, -96px); }
 }
 @keyframes shapes-drift {
   0%, 100% { transform: translateY(0) rotate(0deg); }
-  50%      { transform: translateY(-16px) rotate(2.5deg); }
+  50%      { transform: translateY(-28px) rotate(3.5deg); }
+}
+/* Slow diagonal light beam sweeping across the backdrop for depth. */
+@keyframes beam-sweep {
+  0%       { transform: translateX(-40%) skewX(-12deg); opacity: 0; }
+  12%, 30% { opacity: 1; }
+  50%, 100% { transform: translateX(240%) skewX(-12deg); opacity: 0; }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes bar-indeterminate {
@@ -96,19 +114,23 @@ body {
 ---------------------------------------------------------------------------- */
 .rise { opacity: 1; }
 .motion-logo { opacity: 1; }
-.eyebrow-rule { transform: scaleX(1); transform-origin: left; }
+.logo-glow { opacity: 0.55; }
+.eyebrow-rule { transform: scaleX(1); transform-origin: center; }
 .check-path { stroke-dashoffset: 0; }
 
 @media (prefers-reduced-motion: no-preference) {
   .rise { opacity: 0; animation: rise-in 0.7s var(--ease-out) both; }
   .motion-logo { opacity: 0; animation: logo-in 0.85s var(--ease-out) both; }
-  .motion-float { animation: float-idle 6.5s ease-in-out infinite; }
+  .motion-float { animation: float-idle 4.6s ease-in-out infinite; }
+  .logo-glow { animation: logo-glow 5s ease-in-out infinite; }
   .eyebrow-rule { transform: scaleX(0); animation: eyebrow-line 0.7s 0.35s var(--ease-out) forwards; }
 
-  .anim-orb-a { animation: orb-a 26s ease-in-out infinite; }
-  .anim-orb-b { animation: orb-b 30s ease-in-out infinite; }
-  .anim-grid { animation: grid-pan 40s linear infinite; }
-  .anim-shapes { animation: shapes-drift 18s ease-in-out infinite; }
+  .anim-orb-a { animation: orb-a 16s ease-in-out infinite; }
+  .anim-orb-b { animation: orb-b 19s ease-in-out infinite; }
+  .anim-orb-c { animation: orb-c 22s ease-in-out infinite; }
+  .anim-grid { animation: grid-pan 22s linear infinite; }
+  .anim-shapes { animation: shapes-drift 12s ease-in-out infinite; }
+  .anim-beam { animation: beam-sweep 14s ease-in-out infinite; }
 
   .anim-spin { animation: spin 0.7s linear infinite; }
   .anim-bar > span { animation: bar-indeterminate 1.15s var(--ease-out) infinite; }
