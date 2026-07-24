@@ -1,37 +1,48 @@
 #!/usr/bin/env node
 // One-time helper: exchanges a manual Google OAuth consent for a refresh
-// token and writes it into .env. It never prints the token, listens on
-// 127.0.0.1 only (never the public interface), and exits as soon as the
-// exchange completes or after a 5-minute timeout -- nothing is left
-// listening afterward.
+// token, PROVES it can upload into the target Drive folder with drive.file
+// scope (create + delete one small test PDF), and only then saves it into
+// .env. Never prints any secret (client id/secret, refresh/access token,
+// authorization code). Binds to 127.0.0.1 on an OS-assigned free port --
+// never a hardcoded one, so it can't collide with anything already in use
+// -- and shuts the listener down as soon as the flow finishes (success,
+// failure, or a 5-minute timeout). Nothing is left listening afterward.
 //
-// Prerequisites (fill into .env BEFORE running this script):
-//   GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET
+// Prerequisites (already set in .env before running this):
+//   GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET, GOOGLE_DRIVE_FOLDER_ID
 // from a Google Cloud OAuth client of type "Desktop app".
 //
-// Usage (run on the server itself):
-//   1. From your OWN machine, tunnel this port to the server first:
-//        ssh -L 8945:127.0.0.1:8945 <user>@<server>
+// Usage:
+//   1. From your OWN machine, tunnel whichever port this script prints:
+//        ssh -L <port>:127.0.0.1:<port> <user>@<server>
 //   2. In that same SSH session, on the server:
 //        node scripts/get-refresh-token.mjs
 //   3. Open the printed URL in a browser on YOUR machine, sign in as the
 //      Google account that owns "My Drive > Staff Updated CVs", click Allow.
-//   4. The script saves GOOGLE_OAUTH_REFRESH_TOKEN into .env and exits.
 
 import { createServer } from "node:http";
 import { randomBytes } from "node:crypto";
 import { readFileSync, writeFileSync, chmodSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { Readable } from "node:stream";
 import path from "node:path";
 import { google } from "googleapis";
 
-const PORT = 8945;
-const REDIRECT_URI = `http://127.0.0.1:${PORT}/oauth2callback`;
-const SCOPES = ["https://www.googleapis.com/auth/drive"];
+const SCOPES = ["https://www.googleapis.com/auth/drive.file"];
 const TIMEOUT_MS = 5 * 60 * 1000;
 
 const projectRoot = path.join(path.dirname(fileURLToPath(import.meta.url)), "..");
 const envPath = path.join(projectRoot, ".env");
+
+// A minimal, structurally valid single-page PDF -- small and harmless.
+const TEST_PDF = Buffer.from(
+  "%PDF-1.4\n" +
+    "1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n" +
+    "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n" +
+    "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 72 72]>>endobj\n" +
+    "trailer<</Root 1 0 R>>\n%%EOF",
+  "utf8",
+);
 
 function getEnvValue(envText, key) {
   const match = envText.match(new RegExp(`^${key}=(.*)$`, "m"));
@@ -48,6 +59,14 @@ function upsertEnvValue(envText, key, value) {
   return `${withTrailingNewline}${line}\n`;
 }
 
+function describeGoogleError(err) {
+  const data = err?.response?.data;
+  if (data?.error) {
+    return typeof data.error === "string" ? data.error : JSON.stringify(data.error, null, 2);
+  }
+  return err instanceof Error ? err.message : String(err);
+}
+
 if (!existsSync(envPath)) {
   console.error(`.env not found at ${envPath}`);
   process.exit(1);
@@ -56,6 +75,7 @@ if (!existsSync(envPath)) {
 const envText = readFileSync(envPath, "utf8");
 const clientId = getEnvValue(envText, "GOOGLE_OAUTH_CLIENT_ID");
 const clientSecret = getEnvValue(envText, "GOOGLE_OAUTH_CLIENT_SECRET");
+const folderId = getEnvValue(envText, "GOOGLE_DRIVE_FOLDER_ID");
 
 if (!clientId || !clientSecret) {
   console.error(
@@ -65,17 +85,14 @@ if (!clientId || !clientSecret) {
   );
   process.exit(1);
 }
+if (!folderId) {
+  console.error("GOOGLE_DRIVE_FOLDER_ID must be set in .env first.");
+  process.exit(1);
+}
 
-const oauth2Client = new google.auth.OAuth2(clientId, clientSecret, REDIRECT_URI);
-const state = randomBytes(16).toString("hex");
-
-const authUrl = oauth2Client.generateAuthUrl({
-  access_type: "offline",
-  prompt: "consent",
-  scope: SCOPES,
-  state,
-});
-
+let oauth2Client;
+let state;
+let redirectUri;
 let timeout;
 
 function shutdown(server, code) {
@@ -84,7 +101,7 @@ function shutdown(server, code) {
 }
 
 const server = createServer(async (req, res) => {
-  const url = new URL(req.url, REDIRECT_URI);
+  const url = new URL(req.url, redirectUri);
   if (url.pathname !== "/oauth2callback") {
     res.writeHead(404).end();
     return;
@@ -101,11 +118,14 @@ const server = createServer(async (req, res) => {
   const returnedState = url.searchParams.get("state");
   const code = url.searchParams.get("code");
   if (returnedState !== state || !code) {
-    // Unsolicited hit on this port (e.g. a stray browser request) -- ignore
-    // it rather than tearing down the listener the real callback still needs.
+    // Unsolicited hit on this port -- ignore it, keep waiting for the real callback.
     res.writeHead(400, { "Content-Type": "text/plain" }).end("Invalid request.");
     return;
   }
+
+  res.writeHead(200, { "Content-Type": "text/plain" }).end(
+    "Authorization received -- verifying Drive access now. You can close this tab and check the terminal.",
+  );
 
   try {
     const { tokens } = await oauth2Client.getToken(code);
@@ -115,20 +135,54 @@ const server = createServer(async (req, res) => {
           "https://myaccount.google.com/permissions and run this script again.",
       );
     }
+    oauth2Client.setCredentials(tokens);
 
-    const updated = upsertEnvValue(envText, "GOOGLE_OAUTH_REFRESH_TOKEN", tokens.refresh_token);
-    writeFileSync(envPath, updated, { mode: 0o600 });
+    // Prove drive.file can actually write into the target folder BEFORE
+    // persisting anything -- a refresh token is only worth saving if this
+    // succeeds.
+    const drive = google.drive({ version: "v3", auth: oauth2Client });
+    const testName = `oauth-verify-${Date.now()}.pdf`;
+
+    let fileId;
+    try {
+      const created = await drive.files.create({
+        requestBody: { name: testName, parents: [folderId] },
+        media: { mimeType: "application/pdf", body: Readable.from(TEST_PDF) },
+        fields: "id, name, parents",
+      });
+      fileId = created.data.id;
+      console.log(`Verification upload OK: "${created.data.name}" (id ${fileId}) landed in folder ${folderId}.`);
+    } catch (createErr) {
+      console.error("\nVERIFICATION FAILED: drive.file could not create a file in the target folder.");
+      console.error("Exact Google API error:\n" + describeGoogleError(createErr));
+      console.error(
+        "\nRefresh token was NOT saved. Scope was not widened and no broader access was requested.",
+      );
+      shutdown(server, 1);
+      return;
+    }
+
+    try {
+      await drive.files.delete({ fileId });
+      console.log("Verification test file deleted.");
+    } catch (deleteErr) {
+      console.error(
+        `\nWARNING: creation succeeded but the test file could not be auto-deleted ` +
+          `(id ${fileId}, name "${testName}"). Remove it from Drive manually.`,
+      );
+      console.error(describeGoogleError(deleteErr));
+      // Creation succeeding is the proof that matters; continue to save the token.
+    }
+
+    const updatedEnv = upsertEnvValue(envText, "GOOGLE_OAUTH_REFRESH_TOKEN", tokens.refresh_token);
+    writeFileSync(envPath, updatedEnv, { mode: 0o600 });
     chmodSync(envPath, 0o600);
 
-    res.writeHead(200, { "Content-Type": "text/plain" }).end(
-      "Authorization complete. You can close this tab and return to the terminal.",
-    );
-    console.log(`\nSaved GOOGLE_OAUTH_REFRESH_TOKEN to ${envPath} (value not shown).`);
-    console.log("Restart the app container to pick it up: docker compose up -d --force-recreate app\n");
+    console.log(`\nSUCCESS: refresh token saved to ${envPath} (value not shown).`);
+    console.log("Restart the app container to pick it up: docker compose up -d --force-recreate app");
     shutdown(server, 0);
   } catch (err) {
-    res.writeHead(500, { "Content-Type": "text/plain" }).end("Something went wrong. Check the terminal.");
-    console.error("Token exchange failed:", err instanceof Error ? err.message : err);
+    console.error("\nAuthorization/verification failed:", describeGoogleError(err));
     shutdown(server, 1);
   }
 });
@@ -138,11 +192,25 @@ timeout = setTimeout(() => {
   shutdown(server, 1);
 }, TIMEOUT_MS);
 
-server.listen(PORT, "127.0.0.1", () => {
+// Bind to an OS-assigned free loopback port -- never a fixed one, so this
+// can never collide with a port already in use.
+server.listen(0, "127.0.0.1", () => {
+  const port = server.address().port;
+  redirectUri = `http://127.0.0.1:${port}/oauth2callback`;
+  oauth2Client = new google.auth.OAuth2(clientId, clientSecret, redirectUri);
+  state = randomBytes(16).toString("hex");
+
+  const authUrl = oauth2Client.generateAuthUrl({
+    access_type: "offline",
+    prompt: "consent",
+    scope: SCOPES,
+    state,
+  });
+
   console.log("\nOpen this URL in a browser signed in as the Google account that owns");
   console.log('"My Drive > Staff Updated CVs", then click Allow:\n');
   console.log(authUrl);
-  console.log(`\nWaiting for the redirect to ${REDIRECT_URI} ...`);
-  console.log("If you are running this on the server over SSH, tunnel the port from your");
-  console.log(`own machine first: ssh -L ${PORT}:127.0.0.1:${PORT} <user>@<server>\n`);
+  console.log(`\nWaiting for the redirect to ${redirectUri} ...`);
+  console.log("If running this on the server over SSH, tunnel this exact port from your own machine first:");
+  console.log(`  ssh -L ${port}:127.0.0.1:${port} <user>@<server>\n`);
 });

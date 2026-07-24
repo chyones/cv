@@ -50,10 +50,17 @@ end up owned directly by the account that authorized it.
 4. On the OAuth consent screen (Google Cloud Console > APIs & Services >
    OAuth consent screen), set **Publishing status** to **In production**.
    This is what makes the refresh token non-expiring; if left in "Testing"
-   status, Google expires it after 7 days. Because the `drive` scope is
+   status, Google expires it after 7 days. Because the `drive.file` scope is
    sensitive, the one-time consent screen will show an "unverified app"
    warning -- click through it (Advanced > Go to \[app name]) since you are
    the account owner authorizing your own app.
+
+   The app requests the narrower `drive.file` scope, not the broad `drive`
+   scope: `drive.file` grants access only to files the app itself creates
+   (plus the one Drive folder ID it's told to write into), not the whole
+   Drive. Google Drive's API allows creating a new file with an arbitrary
+   `parents` folder ID under this scope even though the folder itself was
+   never explicitly shared with or opened by the app.
 
 Restart the container after the refresh token is saved so it picks up the
 new value: `docker compose up -d --force-recreate app`.
